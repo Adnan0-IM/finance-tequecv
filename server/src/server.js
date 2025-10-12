@@ -61,9 +61,7 @@ app.use("/api/carousel", carouselRoutes);
 app.use("/api/uploads", uploadRoutes);
 
 // Serve static files
-app.use(express.static(path.join(__dirname, "../..", "finance-teque", "dist")));
-
-app.use(express.static(path.join(__dirname, "../..", "finance-teque", "dist")));
+app.use(express.static(path.join(__dirname, "../..", "client", "dist")));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // Serve uploaded files
@@ -78,7 +76,7 @@ app.use(
 // Instead of using a wildcard, let's use a specific route for the SPA
 app.get("/", (_, res) => {
   res.sendFile(
-    path.join(__dirname, "../..", "finance-teque", "dist", "index.html")
+    path.join(__dirname, "../..", "client", "dist", "index.html")
   );
 });
 
@@ -88,7 +86,7 @@ app.use((req, res, next) => {
     return next();
   }
   res.sendFile(
-    path.join(__dirname, "../..", "finance-teque", "dist", "index.html")
+    path.join(__dirname, "../..", "client", "dist", "index.html")
   );
 });
 
