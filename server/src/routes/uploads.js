@@ -5,10 +5,14 @@ const fs = require("fs");
 
 const router = express.Router();
 
+// Central uploads dir (same as server.js)
+const UPLOADS_DIR =
+  process.env.UPLOADS_DIR || path.join(__dirname, "..", "uploads");
+
 // Ensure destination exists
 const ensureDir = (dir) => fs.mkdirSync(dir, { recursive: true });
 
-const destDir = path.join(__dirname, "..", "uploads", "carousel");
+const destDir = path.join(UPLOADS_DIR, "carousel");
 ensureDir(destDir);
 
 const storage = multer.diskStorage({

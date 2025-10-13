@@ -5,8 +5,8 @@ const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const verificationRoutes = require("./routes/verification");
 const adminRoutes = require("./routes/admin");
-const carouselRoutes = require("./routes/carousel")
-const uploadRoutes = require("./routes/uploads")
+const carouselRoutes = require("./routes/carousel");
+const uploadRoutes = require("./routes/uploads");
 const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 const swaggerSpec = require("./swagger");
@@ -18,6 +18,9 @@ const subscribeRoute = require("./services/newsletterSubscribe");
 dotenv.config();
 // Load env vars (force the ../.env path so it works on aaPanel/PM2)
 dotenv.config({ path: path.join(__dirname, "../.env") });
+
+// Central uploads dir (configurable). Default keeps current layout.
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, "uploads");
 
 const app = express();
 
@@ -53,7 +56,7 @@ app.use(
 // Mount routes
 app.use("/api/auth", authRoutes);
 app.use("/api/verification", verificationRoutes);
-app.use("/api", subscribeRoute)
+app.use("/api", subscribeRoute);
 
 // Mount admin routes
 app.use("/api/admin", adminRoutes);
@@ -64,20 +67,18 @@ app.use("/api/uploads", uploadRoutes);
 app.use(express.static(path.join(__dirname, "../..", "client", "dist")));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Serve uploaded files
+// Serve uploaded files (return 404 if not found; don't fall through to SPA)
 app.use(
   "/uploads",
-  express.static(path.join(__dirname, "uploads"), {
-    fallthrough: true,
+  express.static(UPLOADS_DIR, {
+    fallthrough: false,
     maxAge: "7d",
   })
 );
 
 // Instead of using a wildcard, let's use a specific route for the SPA
 app.get("/", (_, res) => {
-  res.sendFile(
-    path.join(__dirname, "../..", "client", "dist", "index.html")
-  );
+  res.sendFile(path.join(__dirname, "../..", "client", "dist", "index.html"));
 });
 
 // Handle other routes for SPA
@@ -85,9 +86,7 @@ app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {
     return next();
   }
-  res.sendFile(
-    path.join(__dirname, "../..", "client", "dist", "index.html")
-  );
+  res.sendFile(path.join(__dirname, "../..", "client", "dist", "index.html"));
 });
 
 // Multer/global error handler
