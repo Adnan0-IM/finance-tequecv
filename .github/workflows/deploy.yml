@@ -1,0 +1,70 @@
+name: 🚀 Deploy to aaPanel (Node + React + PM2)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧭 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # --- Build Frontend ---
+      - name: 🧱 Install and build React app
+        working-directory: ./client
+        run: |
+          npm install
+          npm run build
+
+      # --- Deploy via SSH ---
+      - name: 📤 Deploy project to aaPanel
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🚀 Pulling latest changes..."
+            cd /www/wwwroot/financetequecv.com
+            git pull origin main
+
+            echo "📦 Installing backend dependencies..."
+            cd server
+            npm install --production || exit 1
+            cd ..
+
+            echo "🧱 Cleaning old frontend build..."
+            rm -rf client/dist
+            mkdir -p client/dist
+
+      # --- Upload new frontend build ---
+      - name: 📁 Upload new frontend build
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./client/dist/*"
+          target: "/www/wwwroot/financetequecv.com/client/dist"
+
+      # --- Restart App with PM2 ---
+      - name: 🔁 Restart PM2 process
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🔁 Restarting app with PM2..."
+            pm2 restart financeteque-server --update-env || pm2 start server/src/server.js --name financeteque-server
+            pm2 save
+            pm2 list
