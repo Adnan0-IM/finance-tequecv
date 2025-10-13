@@ -64,7 +64,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "🔁 Restarting app with PM2..."
-            pm2 restart financeteque-server --update-env || pm2 start server/src/server.js --name financeteque-server
-            pm2 save
-            pm2 list
+            cd /www/wwwroot/financetequecv.com
+            /www/server/nodejs/v22.17.1/bin/pm2 restart financeteque-server --update-env
+            /www/server/nodejs/v22.17.1/bin/pm2 save
