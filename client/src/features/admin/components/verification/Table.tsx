@@ -51,7 +51,7 @@ const VerificationTable = ({
               EMAIL ADDRESS
             </TableHead>
             <TableHead className="border px-4 py-2 text-left font-bold">
-              ROLE
+              ROLE/TYPE
             </TableHead>
             <TableHead className="border px-4 py-2 text-left font-bold">
               SUBMITTED
@@ -92,9 +92,9 @@ const VerificationTable = ({
                       : u.name || "-"}
                   </TableCell>
                   <TableCell className="border px-4 py-2">{u.email}</TableCell>
-                  <TableCell className="border px-4 py-2">{u.role}</TableCell>
+                  <TableCell className="border px-4 py-2">{u.role !== "none" && u.investorType !== "none" && u.investorType && u.investorType } {u.role}</TableCell>
                   <TableCell className="border px-4 py-2 ">
-                    <div className="flex gap-1 items-center">
+                    <div className="flex gap-1 items-center"> 
                       {submittedAt && 
                       
                       <Calendar className="h-3 w-3" />
@@ -119,15 +119,7 @@ const VerificationTable = ({
                   </TableCell>
                   <TableCell className="border px-4 py-2">
                     <div className="flex gap-2 justify-center">
-                      {/* <RowActions
-                        status={status}
-                        verifying={verifying}
-                        onApprove={() => onApprove(u._id)}
-                        onReject={() => onReject(u._id)}
-                        onViewDetails={
-                          onViewDetails ? () => onViewDetails(u._id) : undefined
-                        }
-                      /> */}
+                    
                       {onViewDetails && (
                         <Button
                           variant="ghost"

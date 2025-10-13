@@ -287,7 +287,7 @@ const UserVerificationDetails = () => {
                   {getStatusIcon()}
                 </div>
                 <p className="text-muted-foreground capitalize">
-                  {user?.name || user?.email} • {user.investorType} •{" "}
+                  {user?.name || user?.email} • {user.role !== "none" && user.investorType}{" "}
                   {user?.role}
                 </p>
               </div>
@@ -690,8 +690,9 @@ const UserVerificationDetails = () => {
                 </h1>
                 {getStatusIcon()}
               </div>
-              <p className="text-muted-foreground">
-                {user?.name || user?.email} • {user?.role}
+              <p className="text-muted-foreground capitalize">
+                {user?.name || user?.email} •{" "}
+                {user.role !== "none" && user.investorType !== "none" && user.investorType && user.investorType} {user?.role}
               </p>
             </div>
             <Badge

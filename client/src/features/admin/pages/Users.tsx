@@ -230,7 +230,7 @@ const Users = () => {
                   </TableCell>
                   <TableCell className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
                     {u.role === "investor" && u.investorType}{" "}
-                    {u.role === "investor" && u.investorType && "-"} {u.role}
+                    {u.role}
                   </TableCell>
                   <TableCell className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
                     <Badge
@@ -258,18 +258,18 @@ const Users = () => {
                             className="h-8 w-8 p-0"
                           >
                             <span className="sr-only">Open menu</span>
-                            <Ellipsis className="h-4 w-4" />
+                            <Ellipsis className="size-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
                           <DropdownMenuItem
                             onClick={() => handleViewDetails(u)}
                           >
-                            <Eye className="mr-2 h-4 w-4" />
+                            <Eye className="mr-2 size-5" />
                             View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEditUser(u)}>
-                            <Edit className="mr-2 h-4 w-4" />
+                            <Edit className="mr-2 size-5" />
                             Edit User
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -280,7 +280,7 @@ const Users = () => {
                                 setApproveDialogOpen(true);
                               }}
                             >
-                              <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                              <CheckCircle className="mr-2 size-5 text-green-500" />
                               Approve
                             </DropdownMenuItem>
                           )}
@@ -291,7 +291,7 @@ const Users = () => {
                                 setRejectDialogOpen(true);
                               }}
                             >
-                              <XCircle className="mr-2 h-4 w-4 text-red-500" />
+                              <XCircle className="mr-2 size-5 text-red-500" />
                               Reject
                             </DropdownMenuItem>
                           )}
@@ -303,7 +303,7 @@ const Users = () => {
                               setDeleteDialogOpen(true);
                             }}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className="mr-2 size-5" />
                             Delete User
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -551,6 +551,7 @@ const Users = () => {
                     <option value="startup">Startup</option>
                     <option value="admin">Admin</option>
                   </select>
+
                 </div>
               </div>
             )}

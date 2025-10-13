@@ -144,8 +144,8 @@ const AdminDashboard = () => {
     <DashboardNavigation>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between">
+          <div className="flex flex-col lg:flex-row items-center  lg:gap-4 lg:mb-4">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 bg-brand-primary rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-white" />
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                 Finance Teque
               </h1>
             </div>
-            <p className="text-muted-foreground mt-1">Admin Dashboard</p>
+            <sub className="text-muted-foreground text-base hidden sm:block font-bold ml-5 lg:ml-0">Admin Dashboard</sub>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -303,7 +303,7 @@ const AdminDashboard = () => {
                         EMAIL ADDRESS
                       </TableHead>
                       <TableHead className="border px-4 py-2 text-left font-bold">
-                        ROLE
+                        ROLE/TYPE
                       </TableHead>
                       <TableHead className="border px-4 py-2 text-left font-bold">
                         SUBMITTED
@@ -348,6 +348,7 @@ const AdminDashboard = () => {
                               {user.email}
                             </TableCell>
                             <TableCell className="border px-4 py-2">
+                              {user.investorType !== "none" && user.investorType}{" "}
                               {user.role}
                             </TableCell>
                             <TableCell className="border px-4 py-2">
