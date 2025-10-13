@@ -13,16 +13,29 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import type { UseFormReturn } from "react-hook-form";
-import type { FormValues } from "../../schema";
+import type { UseFormReturn, FieldPath } from "react-hook-form";
 import { StableFormField } from "@/features/shared/components/forms/StableFormField";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { SquareCheck } from "lucide-react";
 
-type Props = {
-  form: UseFormReturn<FormValues>;
+type BioFormValues = {
+  firstName: string;
+  surname: string;
+  phoneNumber: string;
+  email: string;
+  dateOfBirth: string;
+  localGovernment: string;
+  localGovernmentOther?: string;
+  residentialAddress: string;
+  ninNumber: string;
+  stateOfResidence: string;
+  ageBracket?: "adult" | "minor";
+};
+
+type Props<T extends BioFormValues> = {
+  form: UseFormReturn<T>;
   nigerianStates: string[];
   selectedState?: string;
   selectedLga?: string;
@@ -30,14 +43,14 @@ type Props = {
   startup?: boolean;
 };
 
-export function BioDataStep({
+export function BioDataStep<T extends BioFormValues>({
   form,
   nigerianStates,
   selectedState,
   selectedLga,
   currentLGAs,
   startup,
-}: Props) {
+}: Props<T>) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -54,21 +67,21 @@ export function BioDataStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-4">
           <StableFormField
             label="First Name"
-            name="firstName"
+            name={"firstName" as FieldPath<T>}
             control={form.control}
             autoComplete="name"
             placeholder="John"
           />
           <StableFormField
             label="Surname"
-            name="surname"
+            name={"surname" as FieldPath<T>}
             control={form.control}
             autoComplete="surname"
             placeholder="Doe"
           />
           <StableFormField
             label="Phone Number"
-            name="phoneNumber"
+            name={"phoneNumber" as FieldPath<T>}
             control={form.control}
             autoComplete="tel"
             placeholder="+234801827228"
@@ -77,7 +90,7 @@ export function BioDataStep({
           />
           <StableFormField
             label="Email Address"
-            name="email"
+            name={"email" as FieldPath<T>}
             control={form.control}
             autoComplete="email"
             placeholder="name@example.com"
@@ -87,7 +100,7 @@ export function BioDataStep({
           {!startup && (
             <FormField
               control={form.control}
-              name="ageBracket"
+              name={"ageBracket" as FieldPath<T>}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm leading-0 mb-2  sm:text-base">
@@ -160,7 +173,7 @@ export function BioDataStep({
           )}
           <StableFormField
             label="Date of Birth"
-            name="dateOfBirth"
+            name={"dateOfBirth" as FieldPath<T>}
             autoComplete="dob"
             control={form.control}
             type="date"
@@ -168,7 +181,7 @@ export function BioDataStep({
 
           <FormField
             control={form.control}
-            name="stateOfResidence"
+            name={"stateOfResidence" as FieldPath<T>}
             render={({ field }) => (
               <FormItem className="min-[80px]:">
                 <FormLabel className="text-sm leading-0 mb-2 sm:text-base">
@@ -199,7 +212,7 @@ export function BioDataStep({
 
           <FormField
             control={form.control}
-            name="localGovernment"
+            name={"localGovernment" as FieldPath<T>}
             render={({ field }) => (
               <FormItem className="min-h-[80px]">
                 <FormLabel className="text-sm leading-0 mb-2 sm:text-base">
@@ -244,7 +257,7 @@ export function BioDataStep({
           {selectedLga === "Other" && (
             <StableFormField
               label="Specify Local Government"
-              name="localGovernmentOther"
+              name={"localGovernmentOther" as FieldPath<T>}
               control={form.control}
               placeholder="Enter your Local Government"
             />
@@ -252,7 +265,7 @@ export function BioDataStep({
 
           <StableFormField
             label="NIN Number"
-            name="ninNumber"
+            name={"ninNumber" as FieldPath<T>}
             autoComplete="nin-number"
             control={form.control}
             placeholder="12345678901"
@@ -261,7 +274,7 @@ export function BioDataStep({
 
           <StableFormField
             label="Residential Address"
-            name="residentialAddress"
+            name={"residentialAddress" as FieldPath<T>}
             autoComplete="resident-address"
             control={form.control}
             placeholder="123 Main Street, Ikeja, Lagos"

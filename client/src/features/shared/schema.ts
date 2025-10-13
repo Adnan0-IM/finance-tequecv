@@ -137,7 +137,12 @@ export const formSchema = z
     }
   });
 
+// Create a separate schema for startup forms
+export const startupFormSchema = formSchema.omit({ ageBracket: true });
+
+// Update the FormValues type to include both scenarios
 export type FormValues = z.infer<typeof formSchema>;
+export type StartupFormValues = z.infer<typeof startupFormSchema>;
 
 export type StepDef = {
   id: string;

@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import type { UseFormReturn } from "react-hook-form";
-import type { FormValues } from "../../schema";
+import type { UseFormReturn, FieldPath } from "react-hook-form";
 import {
   FormField,
   FormItem,
@@ -17,12 +16,24 @@ import {
 } from "@/components/ui/select";
 import { StableFormField } from "@/features/shared/components/forms/StableFormField";
 
-type Props = {
-  form: UseFormReturn<FormValues>;
+type AccountDetailsValues = {
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  bvnNumber: string;
+  accountType: "Savings" | "Current" | "Domiciliary" | "Corporate" | "Other";
+  accountTypeOther?: string;
+};
+
+type Props<T extends AccountDetailsValues> = {
+  form: UseFormReturn<T>;
   banks: string[];
 };
 
-export function AccountDetailsStep({ form, banks }: Props) {
+export function AccountDetailsStep<T extends AccountDetailsValues>({
+  form,
+  banks,
+}: Props<T>) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -39,14 +50,14 @@ export function AccountDetailsStep({ form, banks }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2">
           <StableFormField
             label="Account Name"
-            name="accountName"
+            name={"accountName" as FieldPath<T>}
             autoComplete="account-name"
             control={form.control}
             placeholder="John Doe"
           />
           <StableFormField
             label="Account Number"
-            name="accountNumber"
+            name={"accountNumber" as FieldPath<T>}
             autoComplete="account-number"
             control={form.control}
             placeholder="0123456789"
@@ -54,7 +65,7 @@ export function AccountDetailsStep({ form, banks }: Props) {
           />
           <FormField
             control={form.control}
-            name="bankName"
+            name={"bankName" as FieldPath<T>}
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm leading-0 mb-2 sm:text-base">
@@ -84,7 +95,7 @@ export function AccountDetailsStep({ form, banks }: Props) {
           />
           <StableFormField
             label="Bank Verification Number (BVN)"
-            name="bvnNumber"
+            name={"bvnNumber" as FieldPath<T>}
             autoComplete="bvn-number"
             control={form.control}
             placeholder="12345678901"
@@ -92,7 +103,7 @@ export function AccountDetailsStep({ form, banks }: Props) {
           />
           <FormField
             control={form.control}
-            name="accountType"
+            name={"accountType" as FieldPath<T>}
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm leading-0 mb-2 sm:text-base">
@@ -127,10 +138,10 @@ export function AccountDetailsStep({ form, banks }: Props) {
             )}
           />
 
-          {form.watch("accountType") === "Other" && (
+          {form.watch("accountType" as FieldPath<T>) === "Other" && (
             <StableFormField
               label="Specify Account Type"
-              name="accountTypeOther"
+              name={"accountTypeOther" as FieldPath<T>}
               control={form.control}
               placeholder="e.g., Joint Account"
             />

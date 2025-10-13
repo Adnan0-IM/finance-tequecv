@@ -1,11 +1,19 @@
 import { AnimatePresence, motion } from "framer-motion";
-import type { UseFormReturn } from "react-hook-form";
-import type { FormValues } from "../../schema";
+import type { UseFormReturn, FieldPath } from "react-hook-form";
+
 import { StableFormField } from "@/features/shared/components/forms/StableFormField";
 
-type Props = { form: UseFormReturn<FormValues> };
+type KycValues = {
+  identificationDocument: File;
+  passportPhoto: File;
+  utilityBill: File;
+};
 
-export function KYCDocumentsStep({ form }: Props) {
+type Props<T extends KycValues> = {
+  form: UseFormReturn<T>;
+};
+
+export function KYCDocumentsStep<T extends KycValues>({ form }: Props<T>) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -24,7 +32,7 @@ export function KYCDocumentsStep({ form }: Props) {
           <div className="border rounded-lg p-3 sm:p-4">
             <StableFormField
               label="1. Means of Identification"
-              name="identificationDocument"
+              name={"identificationDocument" as FieldPath<T>}
               control={form.control}
               description="National ID, Voter's Card, or International Passport"
               isFileInput
@@ -34,7 +42,7 @@ export function KYCDocumentsStep({ form }: Props) {
           <div className="border rounded-lg p-3 sm:p-4">
             <StableFormField
               label="2. Passport Photograph"
-              name="passportPhoto"
+              name={"passportPhoto" as FieldPath<T>}
               control={form.control}
               description="Recent, with clear background"
               isFileInput
@@ -44,7 +52,7 @@ export function KYCDocumentsStep({ form }: Props) {
           <div className="border rounded-lg p-3 sm:p-4">
             <StableFormField
               label="3. Utility Bill"
-              name="utilityBill"
+              name={"utilityBill" as FieldPath<T>}
               control={form.control}
               description="Not older than 3 months"
               isFileInput

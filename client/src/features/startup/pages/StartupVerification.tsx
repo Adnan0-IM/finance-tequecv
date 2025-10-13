@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
@@ -16,32 +15,43 @@ import { stateAndLga } from "@/utils/stateAndLga";
 import { omitKeys } from "@/utils/omitKeys";
 import OnboardingLayout from "@/components/layout/OnboardingLayout";
 import { nigerianBanks } from "@/utils/banks";
-import { formSchema, steps, type FormValues } from "@/features/shared/schema";
+import {
+  startupFormSchema,
+  steps,
+  type StartupFormValues,
+} from "@/features/shared/schema";
 import { BioDataStep } from "@/features/shared/components/steps/BioDataStep";
 import { NextOfKinStep } from "@/features/shared/components/steps/NextOfKinStep";
 import { AccountDetailsStep } from "@/features/shared/components/steps/AccountDetailsStep";
 import { KYCDocumentsStep } from "@/features/shared/components/steps/KYCDocumentsStep";
 
-
+// Create a modified steps list without the ageBracket field
+const startupSteps = steps.map((step) => {
+  if (step.id === "bio-data") {
+    return {
+      ...step,
+      fields: step.fields.filter((field) => field !== "ageBracket"),
+    };
+  }
+  return step;
+});
 
 export default function StartupApplicationPage() {
-
-const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
   const { submitVerification } = useInvestor();
   const [isSaving, setIsSaving] = useState(false);
 
   const [savedFormData, setSavedFormData] = useLocalStorage<
-    Partial<FormValues>
+    Partial<StartupFormValues>
   >("investor-verification-form", null);
 
   // Build base defaults once
-  const baseDefaults: Partial<FormValues> = {
+  const baseDefaults: Partial<StartupFormValues> = {
     firstName: "",
     surname: "",
     phoneNumber: "",
     email: "",
-    ageBracket: "" as unknown as FormValues["ageBracket"], // keep controlled from first render
     dateOfBirth: "",
     localGovernment: "",
     residentialAddress: "",
@@ -68,7 +78,7 @@ const [currentStep, setCurrentStep] = useState(0);
     const dataToRestore = omitKeys(
       savedFormData as Record<string, unknown>,
       ["identificationDocument", "passportPhoto", "utilityBill"] as const
-    ) as Partial<FormValues>;
+    ) as Partial<StartupFormValues>;
 
     const state = dataToRestore.stateOfResidence as string | undefined;
     const savedLga = dataToRestore.localGovernment as string | undefined;
@@ -82,8 +92,8 @@ const [currentStep, setCurrentStep] = useState(0);
     return dataToRestore;
   }, [savedFormData]);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<StartupFormValues>({
+    resolver: zodResolver(startupFormSchema),
     mode: "onChange",
     // Use saved values as initial defaults so they render immediately on refresh
     defaultValues: { ...baseDefaults, ...(restoredDefaults ?? {}) },
@@ -127,7 +137,8 @@ const [currentStep, setCurrentStep] = useState(0);
   const clearSavedProgress = () => setSavedFormData(null);
 
   const nextStep = async () => {
-    const fields = steps[currentStep].fields as (keyof FormValues)[];
+    const fields = startupSteps[currentStep]
+      .fields as (keyof StartupFormValues)[];
     const valid = await form.trigger(fields, { shouldFocus: true });
     if (valid) {
       if (currentStep < steps.length - 1) {
@@ -139,7 +150,7 @@ const [currentStep, setCurrentStep] = useState(0);
       if (firstError) {
         // Cast to FieldPath<FormValues> to avoid `any` and satisfy RHF typing
         form.setFocus(
-          firstError as unknown as import("react-hook-form").FieldPath<FormValues>
+          firstError as unknown as import("react-hook-form").FieldPath<StartupFormValues>
         );
       }
       toast.error(
@@ -155,7 +166,7 @@ const [currentStep, setCurrentStep] = useState(0);
     }
   };
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: StartupFormValues) => {
     try {
       await submitVerification(data);
       navigate("/verification-success");
@@ -167,7 +178,6 @@ const [currentStep, setCurrentStep] = useState(0);
       toast.error("Failed to submit verification data. Please try again.");
     }
   };
-
 
   return (
     <OnboardingLayout
@@ -181,8 +191,8 @@ const [currentStep, setCurrentStep] = useState(0);
               <div className="mb-6 sm:mb-8">
                 <div className="block sm:hidden text-center mb-4">
                   <p className="text-sm font-medium">
-                    Step {currentStep + 1} of {steps.length}:{" "}
-                    {steps[currentStep].name}
+                    Step {currentStep + 1} of {startupSteps.length}:{" "}
+                    {startupSteps[currentStep].name}
                   </p>
                 </div>
 
@@ -190,13 +200,15 @@ const [currentStep, setCurrentStep] = useState(0);
                   <div
                     className="absolute top-0 left-0 h-2 bg-brand-primary rounded-full transition-all duration-500 ease-in-out"
                     style={{
-                      width: `${((currentStep + 1) / steps.length) * 100}%`,
+                      width: `${
+                        ((currentStep + 1) / startupSteps.length) * 100
+                      }%`,
                     }}
                   />
                 </div>
 
                 <div className="hidden sm:flex justify-between">
-                  {steps.map((s, i) => {
+                  {startupSteps.map((s, i) => {
                     const Icon = s.icon;
                     return (
                       <div key={s.id} className="flex flex-col items-center">
@@ -233,7 +245,7 @@ const [currentStep, setCurrentStep] = useState(0);
                 >
                   {currentStep === 0 && (
                     <BioDataStep
-                      form={form as UseFormReturn<FormValues>}
+                      form={form}
                       nigerianStates={nigerianStates}
                       selectedState={selectedState}
                       selectedLga={selectedLga}
@@ -242,22 +254,13 @@ const [currentStep, setCurrentStep] = useState(0);
                     />
                   )}
 
-                  {currentStep === 1 && (
-                    <NextOfKinStep form={form as UseFormReturn<FormValues>} />
-                  )}
+                  {currentStep === 1 && <NextOfKinStep form={form} />}
 
                   {currentStep === 2 && (
-                    <AccountDetailsStep
-                      form={form as UseFormReturn<FormValues>}
-                      banks={nigerianBanks}
-                    />
+                    <AccountDetailsStep form={form} banks={nigerianBanks} />
                   )}
 
-                  {currentStep === 3 && (
-                    <KYCDocumentsStep
-                      form={form as UseFormReturn<FormValues>}
-                    />
-                  )}
+                  {currentStep === 3 && <KYCDocumentsStep form={form} />}
 
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between pt-4">
                     <Button
@@ -290,7 +293,7 @@ const [currentStep, setCurrentStep] = useState(0);
                       </Button>
                     )}
 
-                    {currentStep < steps.length - 1 ? (
+                    {currentStep < startupSteps.length - 1 ? (
                       <Button
                         type="button"
                         onClick={nextStep}

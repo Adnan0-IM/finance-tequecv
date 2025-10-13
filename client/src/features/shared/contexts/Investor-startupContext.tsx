@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { api, getApiErrorMessage } from "@/lib/api";
-import type { FormValues } from "../schema";
+import type { FormValues, StartupFormValues } from "../schema";
 import type { verificationStatusResponse } from "@/types/verification";
 import type { CorporateVerificationForm } from "@/features/investors/corporate/schema";
 
 interface InvestorContextType {
   loading: boolean;
-  submitVerification: (verificationData: FormValues) => Promise<void>;
+  submitVerification: (verificationData: FormValues | StartupFormValues) => Promise<void>;
   verificationStatus: () => Promise<verificationStatusResponse>;
   verificationSubmitted: boolean;
   verStatus: verStatus | null;
@@ -31,7 +31,7 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
   const [verStatus, setVerStatus] = useState<verStatus | null>(null);
   const [verificationSubmitted, setVerificationSubmitted] = useState(false);
 
-  const submitVerification = async (verificationData: FormValues) => {
+  const submitVerification = async (verificationData: FormValues | StartupFormValues) => {
     const {
       identificationDocument,
       passportPhoto,

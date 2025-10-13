@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import type { UseFormReturn } from "react-hook-form";
-import type { FormValues } from "../../schema";
+import type { FieldPath, UseFormReturn } from "react-hook-form";
 import {
   FormField,
   FormItem,
@@ -17,9 +16,25 @@ import {
 } from "@/components/ui/select";
 import { StableFormField } from "@/features/shared/components/forms/StableFormField";
 
-type Props = { form: UseFormReturn<FormValues> };
+type NextOfKinValues = {
+  kinFullName: string;
+  kinPhoneNumber: string;
+  kinEmail: string;
+  kinResidentialAddress: string;
+  kinRelationship:
+    | "Spouse"
+    | "Sibling"
+    | "Parent"
+    | "Guardian"
+    | "Friend"
+    | "Other";
+  kinRelationshipOther?: string;
+};
 
-export function NextOfKinStep({ form }: Props) {
+type Props<T extends NextOfKinValues> = {
+  form: UseFormReturn<T>;
+};
+export function NextOfKinStep<T extends NextOfKinValues>({ form }: Props<T>) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -36,14 +51,14 @@ export function NextOfKinStep({ form }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2">
           <StableFormField
             label="Full Name"
-            name="kinFullName"
+            name={"kinFullName" as FieldPath<T>}
             autoComplete="name"
             control={form.control}
             placeholder="Jane Doe"
           />
           <StableFormField
             label="Phone Number"
-            name="kinPhoneNumber"
+            name={"kinPhoneNumber" as FieldPath<T>}
             autoComplete="tel"
             control={form.control}
             placeholder="+2348073729324"
@@ -52,7 +67,7 @@ export function NextOfKinStep({ form }: Props) {
           />
           <StableFormField
             label="Email Address"
-            name="kinEmail"
+            name={"kinEmail" as FieldPath<T>}
             autoComplete="email"
             control={form.control}
             placeholder="name@example.com"
@@ -61,7 +76,7 @@ export function NextOfKinStep({ form }: Props) {
 
           <FormField
             control={form.control}
-            name="kinRelationship"
+            name={"kinRelationship" as FieldPath<T>}
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm leading-0 mb-2 sm:text-base">
@@ -97,10 +112,10 @@ export function NextOfKinStep({ form }: Props) {
             )}
           />
 
-          {form.watch("kinRelationship") === "Other" && (
+          {form.watch("kinRelationship" as FieldPath<T>) === "Other" && (
             <StableFormField
               label="Specify Relationship"
-              name="kinRelationshipOther"
+              name={"kinRelationshipOther" as FieldPath<T>}
               control={form.control}
               placeholder="e.g., Cousin"
             />
@@ -109,7 +124,7 @@ export function NextOfKinStep({ form }: Props) {
 
         <StableFormField
           label="Residential Address"
-          name="kinResidentialAddress"
+          name={"kinResidentialAddress" as FieldPath<T>}
           autoComplete="address"
           control={form.control}
           placeholder="123 Main Street, Ikeja, Lagos"
