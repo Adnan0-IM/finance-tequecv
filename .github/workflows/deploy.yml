@@ -55,7 +55,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "./client/dist/*"
           target: "/www/wwwroot/financetequecv.com/client/dist/"
-          strip_components: 1
+          strip_components: 2
 
       # --- Restart App with PM2 ---
       - name: 🔁 Restart PM2 process
