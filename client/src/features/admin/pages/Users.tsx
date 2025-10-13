@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { optionsType } from "@/types/admin";
 import type { User } from "@/types/users";
 import {
@@ -25,6 +25,7 @@ import {
   XCircle,
   Search,
   Trash2,
+  ArrowRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +62,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MotionButton } from "@/components/animations/MotionizedButton";
+import { useNavigate } from "react-router";
 
 const Users = () => {
   // State for options and user management
@@ -107,7 +110,11 @@ const Users = () => {
       setApproveDialogOpen(false);
     }
   };
-
+  const navigate = useNavigate()
+  const onViewDetails = useCallback(
+    (userId: string) => navigate(`/admin/verification/${userId}`),
+    [navigate]
+  );
   const handleRejectUser = () => {
     if (selectedUser) {
       verifyUser.mutate({
@@ -459,7 +466,6 @@ const Users = () => {
                       : "Unknown"}
                   </div>
                 </div>
-
                 {/* Show verification details if available */}
                 {selectedUser.verification &&
                   selectedUser.investorType === "personal" &&
@@ -503,13 +509,30 @@ const Users = () => {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-4">
-                        <div className="font-bold">Industry:</div>
+                        <div className="font-bold">Incorporation Number:</div>
                         <div className="col-span-2">
-                          {selectedUser.verification.corporate.company.industry}
+                          {selectedUser.verification.corporate.company.incorporationNumber}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="font-bold">Email:</div>
+                        <div className="col-span-2">
+                          {selectedUser.verification.corporate.company.email}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="font-bold">Address:</div>
+                        <div className="col-span-2">
+                          {selectedUser.verification.corporate.company.address}
                         </div>
                       </div>
                     </div>
                   )}
+                  {selectedUser._id && 
+                  <div className="flex justify-end"> <MotionButton onClick={() => onViewDetails(selectedUser._id) } className="">View User <ArrowRight/></MotionButton></div>
+                  }
               </>
             )}
           </div>
