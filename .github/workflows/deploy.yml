@@ -53,8 +53,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./client/dist"
-          target: "/www/wwwroot/financetequecv.com/client"
+          source: "./client/dist/*"
+          target: "/www/wwwroot/financetequecv.com/client/dist/"
 
       # --- Restart App with PM2 ---
       - name: 🔁 Restart PM2 process
@@ -67,3 +67,4 @@ jobs:
             cd /www/wwwroot/financetequecv.com
             /www/server/nodejs/v22.17.1/bin/pm2 restart financeteque-server --update-env
             /www/server/nodejs/v22.17.1/bin/pm2 save
+
