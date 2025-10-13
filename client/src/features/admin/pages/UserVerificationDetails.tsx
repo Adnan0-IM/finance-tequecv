@@ -83,16 +83,15 @@ const UserVerificationDetails = () => {
   const openPreview = useCallback((title: string, url?: string) => {
     if (!url) return;
 
-    // Convert relative URLs to absolute
+    // Convert relative URLs to absolute using site origin or public base URL
+    const base =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (import.meta as any).env?.VITE_PUBLIC_BASE_URL || window.location.origin;
+
     let fullUrl = url;
     if (url && !url.startsWith("http") && !url.startsWith("data:")) {
-      // If it's not absolute and not a data URL, prepend the server origin
-      fullUrl = `${process.env.VITE_API_URL || "http://localhost:3000"}${
-        url.startsWith("/") ? "" : "/"
-      }${url}`;
+      fullUrl = `${base}${url.startsWith("/") ? "" : "/"}${url}`;
     }
-
-    console.log("Preview URL:", fullUrl); // For debugging
 
     const lower = fullUrl.split("?")[0].toLowerCase();
     const kind: "image" | "pdf" | "other" = lower.endsWith(".pdf")
@@ -287,8 +286,8 @@ const UserVerificationDetails = () => {
                   {getStatusIcon()}
                 </div>
                 <p className="text-muted-foreground capitalize">
-                  {user?.name || user?.email} • {user.role !== "none" && user.investorType}{" "}
-                  {user?.role}
+                  {user?.name || user?.email} •{" "}
+                  {user.role !== "none" && user.investorType} {user?.role}
                 </p>
               </div>
               <Badge
@@ -692,7 +691,11 @@ const UserVerificationDetails = () => {
               </div>
               <p className="text-muted-foreground capitalize">
                 {user?.name || user?.email} •{" "}
-                {user.role !== "none" && user.investorType !== "none" && user.investorType && user.investorType} {user?.role}
+                {user.role !== "none" &&
+                  user.investorType !== "none" &&
+                  user.investorType &&
+                  user.investorType}{" "}
+                {user?.role}
               </p>
             </div>
             <Badge
@@ -1118,6 +1121,16 @@ function DocumentCard({
   url?: string;
   onView: () => void;
 }) {
+  const absUrl =
+    url && !url.startsWith("http") && !url.startsWith("data:")
+      ? 
+        `${
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (import.meta as any).env?.VITE_PUBLIC_BASE_URL ||
+          window.location.origin
+        }${url.startsWith("/") ? "" : "/"}${url}`
+      : url;
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -1154,7 +1167,12 @@ function DocumentCard({
             className="flex-1 py-1 "
           >
             {url ? (
-              <a href={url} target="_blank" rel="noopener noreferrer" download>
+              <a
+                href={absUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
                 <Download className="h-4 w-4 mr-1" />
                 Download
               </a>
