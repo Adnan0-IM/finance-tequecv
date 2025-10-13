@@ -19,13 +19,13 @@ jobs:
           node-version: 22
 
       # --- Build Frontend ---
-      - name: 🧱 Install and build React app
+      - name: 🧱 Install and build Vite (React) app
         working-directory: ./client
         run: |
           npm install
           npm run build
 
-      # --- Deploy via SSH ---
+      # --- Deploy via SSH (Backend + Prepare Frontend Folder) ---
       - name: 📤 Deploy project to aaPanel
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -53,8 +53,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./client/dist/*"
-          target: "/www/wwwroot/financetequecv.com/client/dist"
+          source: "./client/dist"
+          target: "/www/wwwroot/financetequecv.com/client"
 
       # --- Restart App with PM2 ---
       - name: 🔁 Restart PM2 process
