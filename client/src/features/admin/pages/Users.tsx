@@ -110,7 +110,7 @@ const Users = () => {
       setApproveDialogOpen(false);
     }
   };
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const onViewDetails = useCallback(
     (userId: string) => navigate(`/admin/verification/${userId}`),
     [navigate]
@@ -236,8 +236,7 @@ const Users = () => {
                     {u.email}
                   </TableCell>
                   <TableCell className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
-                    {u.role === "investor" && u.investorType}{" "}
-                    {u.role}
+                    {u.role === "investor" && u.investorType} {u.role}
                   </TableCell>
                   <TableCell className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
                     <Badge
@@ -511,7 +510,10 @@ const Users = () => {
                       <div className="grid grid-cols-3 gap-4">
                         <div className="font-bold">Incorporation Number:</div>
                         <div className="col-span-2">
-                          {selectedUser.verification.corporate.company.incorporationNumber}
+                          {
+                            selectedUser.verification.corporate.company
+                              .incorporationNumber
+                          }
                         </div>
                       </div>
 
@@ -530,9 +532,17 @@ const Users = () => {
                       </div>
                     </div>
                   )}
-                  {selectedUser._id && 
-                  <div className="flex justify-end"> <MotionButton onClick={() => onViewDetails(selectedUser._id) } className="">View User <ArrowRight/></MotionButton></div>
-                  }
+                {selectedUser._id && (
+                  <div className="flex justify-end">
+                    {" "}
+                    <MotionButton
+                      onClick={() => onViewDetails(selectedUser._id)}
+                      className=""
+                    >
+                      View User <ArrowRight />
+                    </MotionButton>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -549,32 +559,33 @@ const Users = () => {
               {selectedUser?.name || selectedUser?.email}
             </DialogDescription>
           </DialogHeader>
-
           <div className="grid gap-4 py-4">
             {selectedUser && (
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Role</label>
-                  <select
-                    className="w-full rounded-md border border-gray-300 p-2"
+                  <Label htmlFor="user-role" className="mb-1 block">
+                    Role
+                  </Label>
+                  <Select
                     defaultValue={selectedUser.role}
-                    onChange={(e) => {
+                    onValueChange={(value) => {
                       if (selectedUser) {
                         setUserRole.mutate({
                           userId: selectedUser._id,
-                          role: e.target.value as
-                            | "admin"
-                            | "investor"
-                            | "startup",
+                          role: value as "admin" | "investor" | "startup",
                         });
                       }
                     }}
                   >
-                    <option value="investor">Investor</option>
-                    <option value="startup">Startup</option>
-                    <option value="admin">Admin</option>
-                  </select>
-
+                    <SelectTrigger id="user-role" className="w-full">
+                      <SelectValue placeholder="Select user role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="investor">Investor</SelectItem>
+                      <SelectItem value="startup">Startup</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}
