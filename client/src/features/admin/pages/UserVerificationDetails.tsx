@@ -127,23 +127,22 @@ const UserVerificationDetails = () => {
     }
   }, []);
 
-  // Derived doc URLs (fallback to raw fields if *_Url missing)
   const docSources = useMemo(
     () => [
       {
         key: "idDocument",
         label: "ID Document",
-        url: docs?.idDocumentUrl || docs?.idDocument,
+        url: docs?.idDocument,
       },
       {
         key: "passportPhoto",
         label: "Passport Photo",
-        url: docs?.passportPhotoUrl || docs?.passportPhoto,
+        url: docs?.passportPhoto,
       },
       {
         key: "utilityBill",
         label: "Utility Bill",
-        url: docs?.utilityBillUrl || docs?.utilityBill,
+        url: docs?.utilityBill,
       },
     ],
     [docs]
@@ -1123,8 +1122,7 @@ function DocumentCard({
 }) {
   const absUrl =
     url && !url.startsWith("http") && !url.startsWith("data:")
-      ? 
-        `${
+      ? `${
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (import.meta as any).env?.VITE_PUBLIC_BASE_URL ||
           window.location.origin
