@@ -6,7 +6,9 @@ import type { CorporateVerificationForm } from "@/features/investors/corporate/s
 
 interface InvestorContextType {
   loading: boolean;
-  submitVerification: (verificationData: FormValues | StartupFormValues) => Promise<void>;
+  submitVerification: (
+    verificationData: FormValues | StartupFormValues
+  ) => Promise<void>;
   verificationStatus: () => Promise<verificationStatusResponse>;
   verificationSubmitted: boolean;
   verStatus: verStatus | null;
@@ -31,7 +33,9 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
   const [verStatus, setVerStatus] = useState<verStatus | null>(null);
   const [verificationSubmitted, setVerificationSubmitted] = useState(false);
 
-  const submitVerification = async (verificationData: FormValues | StartupFormValues) => {
+  const submitVerification = async (
+    verificationData: FormValues | StartupFormValues
+  ) => {
     const {
       identificationDocument,
       passportPhoto,
@@ -134,7 +138,6 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
       signatories.forEach((s, i) => {
         if (s.idDocument instanceof File)
           fd.append(`signatories[${i}][idDocument]`, s.idDocument);
-       
       });
       console.log(`Form Data: ${fd}`);
       const res = await api.post(`/verification/corporate/documents`, fd, {
