@@ -19,10 +19,31 @@ const storage = multer.diskStorage({
 });
 
 // Accept PDFs and images
-const allowed = new Set(["application/pdf", "image/jpeg", "image/png"]);
+const allowedMime = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+const allowedExt = new Set([
+  ".pdf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".heic",
+  ".heif",
+]);
+
 const fileFilter = (req, file, cb) => {
-  if (allowed.has(file.mimetype)) cb(null, true);
-  else cb(new Error("Invalid file type"), false);
+  const ext = path.extname(file.originalname || "").toLowerCase();
+  if (allowedMime.has(file.mimetype) || allowedExt.has(ext)) {
+    return cb(null, true);
+  }
+  cb(new Error(`Invalid file type: ${file.mimetype || ext}`), false);
 };
 
 // Default uploader (personal KYC)

@@ -142,7 +142,17 @@ router.post(
     { name: "passportPhoto", maxCount: 1 },
     { name: "utilityBill", maxCount: 1 },
   ]),
-  (err, req, res, next) => next(err),
+  (err, req, res, next) => {
+    if (!err) return next();
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res
+        .status(400)
+        .json({ success: false, message: "File too large (max 5MB)" });
+    }
+    return res
+      .status(400)
+      .json({ success: false, message: err.message || "Upload error" });
+  },
   uploadDocuments
 );
 
