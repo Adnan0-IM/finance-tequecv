@@ -82,8 +82,8 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const response = await api.get(`/verification/status`);
-      setVerStatus(response.data.status);
-      return response.data;
+      setVerStatus(response.data.data); // fix: server returns { data: {...} }
+      return response.data.data;
     } catch (error) {
       const message = getApiErrorMessage(error);
       throw new Error(message || "Failed to fetch verification status");
