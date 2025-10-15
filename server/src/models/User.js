@@ -88,7 +88,20 @@ const UserSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, "Please add a phone number"],
+      required: function () {
+        return this.role !== "admin"; // Phone is required for all roles except admin
+      },
+      validate: {
+        validator: function (v) {
+          // If admin and no phone provided, it's valid
+          if (this.role === "admin" && !v) {
+            return true;
+          }
+          // For non-admins or if phone is provided, validate it
+          return v && v.length > 0;
+        },
+        message: "Please add a phone number",
+      },
     },
     password: {
       type: String,

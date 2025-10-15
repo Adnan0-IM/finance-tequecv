@@ -7,6 +7,7 @@ const {
   deleteUser,
   verifyUser,
   userVerificationStatus,
+  createSubAdmin
 } = require("../controllers/admin");
 
 const router = express.Router();
@@ -605,5 +606,9 @@ router.patch("/users/:id/role", updateUserRole);
  */
 // DELETE /api/admin/users/:id
 router.delete("/users/:id", deleteUser);
+
+// POST /api/admin/create-sub-admin
+router.post("/create-sub-admin", createSubAdmin);
+
 
 module.exports = router;

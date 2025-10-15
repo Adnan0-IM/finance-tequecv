@@ -269,3 +269,54 @@ exports.userVerificationStatus = async (req, res) => {
     });
   }
 };
+
+exports.createSubAdmin = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body || {};
+
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, and password are required",
+      });
+    }
+
+    // Check for existing user with same email or phone
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phone }],
+    });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "A user with the provided email or phone already exists",
+      });
+    }
+
+    // Create new sub-admin user
+    const newUser = new User({
+      name,
+      email,
+      phone,
+      password,
+      role: "admin",
+      isVerified: true,
+      emailVerified: true,
+    });
+
+    await newUser.save();
+
+    // Return the created user without the password
+    const userObj = newUser.toObject();
+    delete userObj.password;
+
+    res.status(201).json({ success: true, data: userObj });
+  } catch (error) {
+    console.error("Create sub-admin error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while creating sub-admin",
+      error: error.message,
+    });
+  }
+};
