@@ -40,8 +40,23 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
     { title: "Dashboard", path: "/admin", icon: Home },
     { title: "Verification", path: "/admin/verification", icon: Verified },
     { title: "Manage Users", path: "/admin/users", icon: User2 },
-    { title: "Manage Carousel", path: "/admin/carousel", icon: RectangleHorizontal },
+    {
+      title: "Manage Carousel",
+      path: "/admin/carousel",
+      icon: RectangleHorizontal,
+    },
     { title: "Manage SubAdmins", path: "/admin/sub-admins", icon: User },
+  ];
+
+  const navLinksSubAdmin = [
+    { title: "Dashboard", path: "/admin", icon: Home },
+    { title: "Verification", path: "/admin/verification", icon: Verified },
+    { title: "Manage Users", path: "/admin/users", icon: User2 },
+    {
+      title: "Manage Carousel",
+      path: "/admin/carousel",
+      icon: RectangleHorizontal,
+    },
   ];
 
   const navLinksInvestor = [
@@ -58,7 +73,12 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
     { title: "Documents", path: "/dashboard/documents", icon: FileText },
     { title: "Settings", path: "/dashboard/settings", icon: Settings },
   ];
-  let navLinks = navLinksAdmin;
+
+  let navLinks = navLinksAdmin; // Default to admin links
+  if (user?.role === "admin" && !user?.isSuper) {
+    navLinks = navLinksSubAdmin;
+  }
+
   if (user?.role === "startup") {
     navLinks = navLinksFundRaiser;
   } else if (user?.role === "investor") {
@@ -286,15 +306,16 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                     <User className="mr-2 size-5 hover:text-white" />
                     <span className="text-base">Profile</span>
                   </DropdownMenuItem>
-                  {location.pathname === "/dashboard" && user?.role !== "admin" && (
-                    <DropdownMenuItem
-                      onClick={() => navigate("/dashboard/settings")}
-                      className="cursor-pointer"
-                    >
-                      <Settings className="mr-2 size-5 hover:text-white" />
-                      <span className="text-base">Settings</span>
-                  </DropdownMenuItem>
-                  )}
+                  {location.pathname === "/dashboard" &&
+                    user?.role !== "admin" && (
+                      <DropdownMenuItem
+                        onClick={() => navigate("/dashboard/settings")}
+                        className="cursor-pointer"
+                      >
+                        <Settings className="mr-2 size-5 hover:text-white" />
+                        <span className="text-base">Settings</span>
+                      </DropdownMenuItem>
+                    )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
