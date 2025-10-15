@@ -573,7 +573,7 @@ const Users = () => {
                       if (selectedUser) {
                         setUserRole.mutate({
                           userId: selectedUser._id,
-                          role: value as "admin" | "investor" | "startup",
+                          role: value as "investor" | "startup",
                         });
                       }
                     }}
@@ -584,7 +584,6 @@ const Users = () => {
                     <SelectContent>
                       <SelectItem value="investor">Investor</SelectItem>
                       <SelectItem value="startup">Startup</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
