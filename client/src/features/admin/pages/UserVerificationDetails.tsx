@@ -34,10 +34,12 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 const UserVerificationDetails = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user: loggedInUser } = useAuth();
 
   const {
     data: user,
@@ -561,53 +563,55 @@ const UserVerificationDetails = () => {
             </AccordionItem>
 
             {/* Activity / verification meta */}
-            <AccordionItem value="verification" className="border rounded-lg">
-              <AccordionTrigger className="px-5 py-4 hover:no-underline">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <Activity className="h-5 w-5 text-gray-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold">Verification Activity</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Review history and timeline
-                    </p>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-5 pb-6">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <InfoField
-                      label="Submitted At"
-                      value={
-                        submittedAt
-                          ? new Date(submittedAt).toLocaleString()
-                          : undefined
-                      }
-                    />
-                    <InfoField
-                      label="Reviewed At"
-                      value={
-                        reviewedAt
-                          ? new Date(reviewedAt).toLocaleString()
-                          : undefined
-                      }
-                    />
-                    <InfoField label="Reviewed By" value={reviewedBy} />
-                  </div>
-
-                  {status === "rejected" && rejectionReason && (
-                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <h4 className="font-medium text-red-900 mb-2">
-                        Rejection Reason
-                      </h4>
-                      <p className="text-red-700">{rejectionReason}</p>
+            {loggedInUser?.isSuper && (
+              <AccordionItem value="verification" className="border rounded-lg">
+                <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <Activity className="h-5 w-5 text-gray-600" />
                     </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Verification Activity</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Review history and timeline
+                      </p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-5 pb-6">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <InfoField
+                        label="Submitted At"
+                        value={
+                          submittedAt
+                            ? new Date(submittedAt).toLocaleString()
+                            : undefined
+                        }
+                      />
+                      <InfoField
+                        label="Reviewed At"
+                        value={
+                          reviewedAt
+                            ? new Date(reviewedAt).toLocaleString()
+                            : undefined
+                        }
+                      />
+                      <InfoField label="Reviewed By" value={reviewedBy} />
+                    </div>
+
+                    {status === "rejected" && rejectionReason && (
+                      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <h4 className="font-medium text-red-900 mb-2">
+                          Rejection Reason
+                        </h4>
+                        <p className="text-red-700">{rejectionReason}</p>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
 
           {/* Reject dialog */}
@@ -937,53 +941,55 @@ const UserVerificationDetails = () => {
           </AccordionItem>
 
           {/* Activity / verification meta */}
-          <AccordionItem value="verification" className="border rounded-lg">
-            <AccordionTrigger className="px-5 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-gray-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold">Verification Activity</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Review history and timeline
-                  </p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-5 pb-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <InfoField
-                    label="Submitted At"
-                    value={
-                      submittedAt
-                        ? new Date(submittedAt).toLocaleString()
-                        : undefined
-                    }
-                  />
-                  <InfoField
-                    label="Reviewed At"
-                    value={
-                      reviewedAt
-                        ? new Date(reviewedAt).toLocaleString()
-                        : undefined
-                    }
-                  />
-                  <InfoField label="Reviewed By" value={reviewedBy} />
-                </div>
-
-                {status === "rejected" && rejectionReason && (
-                  <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <h4 className="font-medium text-red-900 mb-2">
-                      Rejection Reason
-                    </h4>
-                    <p className="text-red-700">{rejectionReason}</p>
+          {loggedInUser?.isSuper && (
+            <AccordionItem value="verification" className="border rounded-lg">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <Activity className="h-5 w-5 text-gray-600" />
                   </div>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+                  <div className="text-left">
+                    <h3 className="font-semibold">Verification Activity</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Review history and timeline
+                    </p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-5 pb-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <InfoField
+                      label="Submitted At"
+                      value={
+                        submittedAt
+                          ? new Date(submittedAt).toLocaleString()
+                          : undefined
+                      }
+                    />
+                    <InfoField
+                      label="Reviewed At"
+                      value={
+                        reviewedAt
+                          ? new Date(reviewedAt).toLocaleString()
+                          : undefined
+                      }
+                    />
+                    <InfoField label="Reviewed By" value={reviewedBy} />
+                  </div>
+
+                  {status === "rejected" && rejectionReason && (
+                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <h4 className="font-medium text-red-900 mb-2">
+                        Rejection Reason
+                      </h4>
+                      <p className="text-red-700">{rejectionReason}</p>
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
         </Accordion>
 
         {/* Reject dialog */}
