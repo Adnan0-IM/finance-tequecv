@@ -146,7 +146,9 @@ exports.updateUserRole = async (req, res) => {
     res.status(200).json({ success: true, data: user });
   } catch (err) {
     console.error("updateUserRole error:", err);
-    res.status(500).json({ success: false, message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };
 
@@ -162,7 +164,9 @@ exports.deleteUser = async (req, res) => {
       .json({ success: true, message: "User deleted successfully" });
   } catch (err) {
     console.error("deleteUser error:", err);
-    res.status(500).json({ success: false, message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };
 
@@ -272,7 +276,15 @@ exports.userVerificationStatus = async (req, res) => {
 
 exports.createSubAdmin = async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body || {};
+    const { name, email, phone, password } = req.body;
+
+    // Check if the email is from the allowed domain
+    if (!email.toLowerCase().endsWith("@financetequecv.com")) {
+      return res.status(400).json({
+        success: false,
+        message: "Admin email must use the financetequecv.com domain",
+      });
+    }
 
     // Validate required fields
     if (!name || !email || !password) {
@@ -300,6 +312,7 @@ exports.createSubAdmin = async (req, res) => {
       phone,
       password,
       role: "admin",
+      isSuper: false,
       isVerified: true,
       emailVerified: true,
     });

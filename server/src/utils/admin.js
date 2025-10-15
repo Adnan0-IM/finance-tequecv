@@ -25,6 +25,7 @@ async function ensureAdminUser() {
     phone,
     password, // hashed by pre-save hook
     role: "admin",
+    isSuper: true,
     isVerified: true,
     emailVerified: true,
     verification: { status: "approved", submittedAt: new Date()},

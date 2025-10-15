@@ -115,6 +115,10 @@ const UserSchema = new mongoose.Schema(
       default: "none",
       index: true,
     },
+    isSuper: {
+      type: Boolean,
+      default: false,
+    },
     investorType: {
       type: String,
       enum: ["personal", "corporate", "none"],
