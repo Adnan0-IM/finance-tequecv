@@ -42,27 +42,33 @@ const AdminDashboard = () => {
 
   // Memoize users array to prevent unnecessary recalculations
   const users = useMemo(() => data?.users || [], [data?.users]);
+  const usersWithoutAdmins = useMemo(
+    () => users.filter((u) => u.role !== "admin"),
+    [users]
+  );
 
   // Calculate stats
   const stats = useMemo(() => {
     const totalUsers = users.length;
     const adminUsers = users.filter((u) => u.role === "admin").length;
+    const totalUsersWithoutAdmins = users.filter((u) => u.role !== "admin").length;
     const startupUsers = users.filter((u) => u.role === "startup").length;
     const investorUsers = users.filter((u) => u.role === "investor").length;
-    const verifiedUsers = users.filter((u) => u.isVerified).length;
-    const pendingVerification = users.filter(
+    const verifiedUsers = usersWithoutAdmins.filter((u) => u.isVerified).length;
+    const pendingVerification = usersWithoutAdmins.filter(
       (u) => u.verification?.status === "pending"
     ).length;
 
     return {
       totalUsers,
+      totalUsersWithoutAdmins,
       adminUsers,
       startupUsers,
       investorUsers,
       verifiedUsers,
       pendingVerification,
     };
-  }, [users]);
+  }, [users, usersWithoutAdmins]);
 
   // Sort recent users by creation date
   const recentUsersAll = useMemo(() => {
@@ -198,7 +204,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <div className="mb-4">
-                <span className="text-3xl font-bold">{stats.totalUsers}</span>
+                <span className="text-3xl font-bold">{user?.isSuper ? stats.totalUsers : stats.totalUsersWithoutAdmins}</span>
               </div>
               <Button
                 variant="ghost"
