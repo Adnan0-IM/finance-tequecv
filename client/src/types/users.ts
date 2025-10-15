@@ -100,6 +100,7 @@ export type User = {
   email: string;
   phone?: string;
   role: "admin" | "investor" | "startup" | "none";
+  isSuper?: boolean;
   investorType?: "personal" | "corporate" | "none";
   isVerified: boolean;
   createdAt?: string;
