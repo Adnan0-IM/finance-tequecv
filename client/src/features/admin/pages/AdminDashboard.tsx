@@ -27,9 +27,11 @@ import { useUsers } from "../api/adminQueries";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import type { User } from "@/types/users";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
 
   // Fetch all users for dashboard stats
@@ -62,8 +64,8 @@ const AdminDashboard = () => {
     };
   }, [users]);
 
-  // Recent users (last 5)
-  const recentUsers = useMemo(() => {
+  // Sort recent users by creation date
+  const recentUsersAll = useMemo(() => {
     return users
       .sort(
         (a, b) =>
@@ -72,6 +74,16 @@ const AdminDashboard = () => {
       )
       .slice(0, 5);
   }, [users]);
+
+  // Filter recent users based on admin privileges
+  const recentUsers = useMemo(() => {
+    // Super admins can see all users including admins
+    if (user?.isSuper) {
+      return recentUsersAll;
+    }
+    // Regular admins can only see non-admin users
+    return recentUsersAll.filter((u) => u.role !== "admin");
+  }, [recentUsersAll, user?.isSuper]);
 
   // Filtered recent users based on search
   const filteredRecentUsers = useMemo(() => {
@@ -154,7 +166,9 @@ const AdminDashboard = () => {
                 Finance Teque
               </h1>
             </div>
-            <sub className="text-muted-foreground text-base hidden sm:block font-bold ml-5 lg:ml-0">Admin Dashboard</sub>
+            <sub className="text-muted-foreground text-base hidden sm:block font-bold ml-5 lg:ml-0">
+              Admin Dashboard
+            </sub>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -348,7 +362,8 @@ const AdminDashboard = () => {
                               {user.email}
                             </TableCell>
                             <TableCell className="border px-4 py-2">
-                              {user.investorType !== "none" && user.investorType}{" "}
+                              {user.investorType !== "none" &&
+                                user.investorType}{" "}
                               {user.role}
                             </TableCell>
                             <TableCell className="border px-4 py-2">
