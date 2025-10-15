@@ -88,6 +88,7 @@ const Users = () => {
   const deleteUser = useDeleteUser();
 
   const users = data?.users;
+  const filteredUsers = users?.filter((user) => user.role !== "admin");
   const pagination = data?.pagination;
 
   // Handlers for user actions
@@ -223,8 +224,8 @@ const Users = () => {
                   {(error as Error)?.message || "Failed to load users"}
                 </TableCell>
               </TableRow>
-            ) : users?.length ? (
-              users.map((u: User) => (
+            ) : filteredUsers?.length ? (
+              filteredUsers.map((u: User) => (
                 <TableRow
                   className="even:bg-brand-light hover:bg-brand-light/50 m-0 border-t p-0"
                   key={u._id}
@@ -330,7 +331,7 @@ const Users = () => {
         {pagination && pagination.pages > 1 && (
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Showing {users?.length || 0} of {pagination.total} users
+              Showing {filteredUsers?.length || 0} of {pagination.total} users
             </div>
             <div className="flex items-center gap-2">
               <Button
