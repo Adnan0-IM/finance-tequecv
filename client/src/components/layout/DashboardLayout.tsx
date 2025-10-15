@@ -33,6 +33,7 @@ import MobileMenuMotion from "../animations/MobileDashboardMemuMotion";
 const DashboardNavigation = ({ children }: { children: ReactNode }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = window.location;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinksAdmin = [
@@ -40,6 +41,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
     { title: "Verification", path: "/admin/verification", icon: Verified },
     { title: "Manage Users", path: "/admin/users", icon: User2 },
     { title: "Manage Carousel", path: "/admin/carousel", icon: RectangleHorizontal },
+    { title: "Manage SubAdmins", path: "/admin/sub-admins", icon: User },
   ];
 
   const navLinksInvestor = [
@@ -284,13 +286,15 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                     <User className="mr-2 size-5 hover:text-white" />
                     <span className="text-base">Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate("/dashboard/settings")}
-                    className="cursor-pointer"
-                  >
-                    <Settings className="mr-2 size-5 hover:text-white" />
-                    <span className="text-base">Settings</span>
+                  {location.pathname === "/dashboard" && user?.role !== "admin" && (
+                    <DropdownMenuItem
+                      onClick={() => navigate("/dashboard/settings")}
+                      className="cursor-pointer"
+                    >
+                      <Settings className="mr-2 size-5 hover:text-white" />
+                      <span className="text-base">Settings</span>
                   </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}

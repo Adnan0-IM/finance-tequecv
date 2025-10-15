@@ -105,6 +105,53 @@ const getVerStatusApi = async (
   }
 };
 
+// New function to create a sub-admin
+const createSubAdminApi = async ({
+  name,
+  email,
+  phone,
+  password,
+}: {
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+}) => {
+  try {
+    const response = await api.post("/admin/create-sub-admin", {
+      name,
+      email,
+      phone,
+      password,
+    });
+    return response.data.data as User;
+  } catch (error) {
+    const message = getApiErrorMessage(error);
+    throw new Error(message || "Failed to create sub-admin");
+  }
+};
+
+// New hook to create a sub-admin
+export const useCreateSubAdmin = () => {
+  const qc = useQueryClient();
+  return useMutation<
+    User,
+    Error,
+    {
+      name: string;
+      email: string;
+      phone?: string;
+      password: string;
+    }
+  >({
+    mutationFn: createSubAdminApi,
+    onSuccess: () => {
+      // Invalidate the users query to refresh the list
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+};
+
 export const useUsers = (options: optionsType) => {
   return useQuery({
     queryKey: adminKeys.users(options),

@@ -16,6 +16,7 @@ import UserVerificationDetails from "@/features/admin/pages/UserVerificationDeta
 import ManageCarouselPage from "@/features/admin/carousel/pages/ManageCarouselPage";
 import InvestorTypePage from "@/features/investors/pages/InvestorTypePage";
 import CorporateVerification from "@/features/investors/corporate/pages/CorporateVerification";
+import AdminSettings from "@/features/admin/pages/AdminSettings";
 
 const HomePage = lazy(() => import("../pages/HomePage"));
 const AboutPage = lazy(() =>
@@ -343,6 +344,16 @@ export default function AppRoutes() {
               <ProtectedRoute>
                 <RoleGuard allow={["admin"]}>
                   <ManageCarouselPage />
+                </RoleGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/sub-admins"
+            element={
+              <ProtectedRoute>
+                <RoleGuard allow={["admin"]}>
+                  <AdminSettings />
                 </RoleGuard>
               </ProtectedRoute>
             }
