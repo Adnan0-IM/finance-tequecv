@@ -107,7 +107,7 @@ const VerificationToolbar = ({
 
             <Input
               id="search"
-              className="pl-10 w-92 "
+              className="pl-10 w-auto sm:w-92 "
               placeholder="Name, email, phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

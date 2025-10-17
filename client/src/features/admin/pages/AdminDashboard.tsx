@@ -168,7 +168,7 @@ const AdminDashboard = () => {
 
   return (
     <DashboardNavigation>
-      <AdminPageWrapper {...getAdminAnimation("dashboard")}>
+      <AdminPageWrapper {...getAdminAnimation("users")}>
         <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between">

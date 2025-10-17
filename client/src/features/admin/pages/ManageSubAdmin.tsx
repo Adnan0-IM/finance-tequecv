@@ -168,7 +168,7 @@ const ManageSubAdmin = () => {
 
   return (
     <DashboardNavigation>
-      <AdminPageWrapper {...getAdminAnimation("subAdmin")}>
+      <AdminPageWrapper {...getAdminAnimation("users")}>
         <div className="flex justify-between items-center">
           <h1 className="text-xl md:text-2xl font-semibold">
             Manage Administrators

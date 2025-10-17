@@ -169,12 +169,12 @@ const Verification = () => {
 
   return (
     <DashboardNavigation>
-      <AdminPageWrapper {...getAdminAnimation("verification")}>
-        <div className="flex flex-wrap justify-between items-center mb-6">
+      <AdminPageWrapper {...getAdminAnimation("users")}>
+        <div className="flex flex-col sm:flex-row flex-wrap justify-between  mb-6">
           <h1 className="text-xl md:text-2xl font-semibold">Verification</h1>
 
           {/* Statistics Cards */}
-          <div className="flex gap-3 items-center mt-2 md:mt-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4  gap-3 items-center mt-2 md:mt-0">
             <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs text-brand-accent">Total</div>
               <div className="text-base text-brand-accent font-semibold">
