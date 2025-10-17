@@ -166,7 +166,7 @@ const ManageSubAdmin = () => {
   return (
     <DashboardNavigation>
       <div className="flex justify-between items-center">
-        <h2>Manage Administrators</h2>
+        <h1 className="text-xl md:text-2xl font-semibold">Manage Administrators</h1>
         <Button
           onClick={() => setCreateAdminOpen(true)}
           className="flex items-center gap-2"
