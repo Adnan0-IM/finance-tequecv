@@ -45,8 +45,8 @@ const Pagination = ({
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <span className="text-sm">Rows per page</span>
+      <div className="flex flex-col sm:flex-row items-center gap-2">
+        <span className="text-sm hidden sm:block">Rows per page</span>
         <Select
           value={String(limit)}
           onValueChange={(v) => setLimit(Number(v))}
@@ -62,12 +62,12 @@ const Pagination = ({
         </Select>
       </div>
       {totalUsers !== undefined && showingUsers !== undefined && (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm hidden sm:block text-muted-foreground">
           Showing {showingUsers > 0 ? showingUsers : 0} of {totalUsers} users
         </div>
       )}
       <div className="flex items-center gap-3">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm hidden sm:block text-muted-foreground">
           {pagination ? `Page ${currentPage} of ${totalPages}` : null}
         </div>
         <Button
