@@ -25,13 +25,16 @@ type UsersResult = { users: User[]; pagination: paginationType };
 const fetchUsers = async (options: optionsType): Promise<UsersResult> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 20;
-  const { status, q } = options;
+  const { status, q, role, excludeAdmin, onlySubmitted } = options;
 
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("limit", String(limit));
   if (status) params.set("status", status);
   if (q && q.trim()) params.set("q", q.trim());
+  if (role) params.set("role", role);
+  if (excludeAdmin) params.set("excludeAdmin", String(excludeAdmin));
+  if (onlySubmitted) params.set("onlySubmitted", String(onlySubmitted));
 
   try {
     const res = await api.get(`/admin/users?${params.toString()}`);

@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { AxiosError } from "axios";
@@ -11,6 +12,15 @@ import type { User } from "@/types/users";
 
 const TOKEN_KEY = "accessToken";
 
+type AllStats = {
+  totalUsers: number;
+  totalUsersWithoutAdmins: number;
+  adminUsers: number;
+  startupUsers: number;
+  investorUsers: number;
+  verifiedUsers: number;
+  pendingVerification: number;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +39,8 @@ interface AuthContextType {
   setRole: (role: string) => Promise<void>;
   setInvestorType: (type: string) => Promise<void>;
   deleteMe: () => Promise<void>;
+  allStats: AllStats
+  setAllStats: React.Dispatch<SetStateAction<AllStats>>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +48,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [allStats, setAllStats] = useState<AllStats>({
+    totalUsers: 0,
+    totalUsersWithoutAdmins: 0,
+    adminUsers: 0,
+    startupUsers: 0,
+    investorUsers: 0,
+    verifiedUsers: 0,
+    pendingVerification: 0,
+  });
 
   api.defaults.withCredentials = true;
 
@@ -304,6 +325,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole,
         setInvestorType,
         deleteMe,
+        allStats,
+        setAllStats
       }}
     >
       {children}

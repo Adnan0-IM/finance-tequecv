@@ -31,7 +31,7 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setAllStats } = useAuth();
   const [search, setSearch] = useState("");
 
   // Fetch all users for dashboard stats
@@ -54,7 +54,7 @@ const AdminDashboard = () => {
     const totalUsersWithoutAdmins = users.filter((u) => u.role !== "admin").length;
     const startupUsers = users.filter((u) => u.role === "startup").length;
     const investorUsers = users.filter((u) => u.role === "investor").length;
-    const verifiedUsers = usersWithoutAdmins.filter((u) => u.isVerified).length;
+    const verifiedUsers = usersWithoutAdmins.filter((u) => u.verification?.status === "approved").length;
     const pendingVerification = usersWithoutAdmins.filter(
       (u) => u.verification?.status === "pending"
     ).length;
@@ -70,6 +70,7 @@ const AdminDashboard = () => {
     };
   }, [users, usersWithoutAdmins]);
 
+  setAllStats(stats)
   // Sort recent users by creation date
   const recentUsersAll = useMemo(() => {
     return users
@@ -394,7 +395,7 @@ const AdminDashboard = () => {
                                     : "secondary"
                                 }
                               >
-                                {status}
+                                {user.role === "admin" ? "Admin" : status}
                               </Badge>
                             </TableCell>
                             <TableCell className="border px-4 py-2">
@@ -424,9 +425,21 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className={`grid grid-cols-2  gap-4 ${user?.isSuper ? "md:grid-cols-3 lg:grid-cols-6" : "md:grid-cols-3 lg:grid-cols-5"}`}>
+   {
+            user?.isSuper && (
+
+          <Card className="border-orange-500/30 hover:shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="text-2xl font-bold text-orange-700">
+                {stats.adminUsers}
+              </div>
+              <div className="text-sm text-muted-foreground">Admin Users</div>
+            </CardContent>
+          </Card>)
+          }
           <Card className="border-brand-primary/30 hover:shadow-sm">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 text-center">
               <div className="text-2xl font-bold text-brand-primary">
                 {stats.verifiedUsers}
               </div>
@@ -436,7 +449,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
           <Card className="border-brand-secondary/30 hover:shadow-sm">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 text-center">
               <div className="text-2xl font-bold text-brand-secondary">
                 {stats.pendingVerification}
               </div>
@@ -445,16 +458,25 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+          <Card className="border-orange-500/30 hover:shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="text-2xl font-bold text-orange-500">
+                {stats.investorUsers}
+              </div>
+              <div className="text-sm text-muted-foreground">Investor Users</div>
+            </CardContent>
+          </Card>
           <Card className="border-brand-accent/30 hover:shadow-sm">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 text-center">
               <div className="text-2xl font-bold text-brand-accent">
                 {stats.startupUsers}
               </div>
               <div className="text-sm text-muted-foreground">Startup Users</div>
             </CardContent>
           </Card>
+       
           <Card className="border-brand-primary/30 hover:shadow-sm">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingUp className="h-4 w-4 text-brand-primary" />
                 <div className="text-2xl font-bold text-brand-primary">

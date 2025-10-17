@@ -1,8 +1,11 @@
 export type optionsType = {
   page: number;
   limit: number;
-  status?: "pending" | "approved" | "rejected" | "";
+  status?: "pending" | "approved" | "rejected" | "all" | "";
   q?: string;
+  role?: "investor" | "startup" | "admin";
+  excludeAdmin?: boolean;
+  onlySubmitted?: boolean;
 };
 
 export type paginationType = {
@@ -23,11 +26,11 @@ export type verifyUserPropTypes = {
 };
 
 export type verificationStatustypes = {
-    status:"approved" | "rejected" | "pending"
-    isVerified: true,
-    rejectionReason: string,
-    verifiedAt: Date
-    reviewedAt: Date
-    reviewedBy: string
-    submittedAt: Date
-}
+  status: "approved" | "rejected" | "pending";
+  isVerified: true;
+  rejectionReason: string;
+  verifiedAt: Date;
+  reviewedAt: Date;
+  reviewedBy: string;
+  submittedAt: Date;
+};
