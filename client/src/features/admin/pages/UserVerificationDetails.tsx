@@ -802,10 +802,10 @@ const UserVerificationDetails = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <InfoField label="First Name" value={personal?.firstName} />
                 <InfoField label="Surname" value={personal?.surname} />
-                <InfoField
+              { user.role !== "startup" && <InfoField
                   label="minor or adult"
                   value={personal?.ageBracket}
-                />
+                />}
                 <InfoField
                   label="Date of Birth"
                   value={personal?.dateOfBirth}
