@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -64,14 +65,23 @@ import {
 } from "@/components/ui/select";
 import { MotionButton } from "@/components/animations/MotionizedButton";
 import { useNavigate } from "react-router";
+import Pagination from "../components/verification/Pagination";
 
 const Users = () => {
   // State for options and user management
   const [options, setoptions] = useState<optionsType>({
     page: 1,
-    limit: 20,
+    limit: 50,
+    excludeAdmin: true,
+    onlySubmitted: false, // Show all users by default
   });
 
+  function setPage(page: number) {
+    setoptions({ ...options, page: page });
+  }
+  function setLimit(limit: number) {
+    setoptions({ ...options, limit: limit });
+  }
   // State for modals
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
@@ -87,9 +97,22 @@ const Users = () => {
   const verifyUser = useVerifyUser();
   const deleteUser = useDeleteUser();
 
-  const users = data?.users;
-  const filteredUsers = users?.filter((user) => user.role !== "admin");
+  // Users come pre-filtered from the API now
+  const filteredUsers = data?.users;
   const pagination = data?.pagination;
+
+  // Debug output to check users and their roles
+  useEffect(() => {
+    if (filteredUsers?.length) {
+      console.log(
+        "Users by role:",
+        filteredUsers.reduce<Record<string, number>>((acc, user) => {
+          acc[user.role] = (acc[user.role] || 0) + 1;
+          return acc;
+        }, {})
+      );
+    }
+  }, [filteredUsers]);
 
   // Handlers for user actions
   const handleViewDetails = (user: User) => {
@@ -138,50 +161,147 @@ const Users = () => {
   };
 
   useEffect(() => {
-    setoptions({ page: 1, limit: 20 });
+    // Reset to initial state when component mounts
+    setoptions({
+      page: 1,
+      limit: 20,
+      excludeAdmin: true,
+      onlySubmitted: false, // Show all users by default
+    });
   }, []);
 
   return (
     <DashboardNavigation>
-      <h2>Manage Users</h2>
-      <div className="mt-4 flex flex-wrap items-end gap-4 mb-4">
-        <div className="grid gap-1.5">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={options.status || "all"}
-            onValueChange={(v) => {
-              const value =
-                v === "all"
-                  ? undefined
-                  : (v as "pending" | "approved" | "rejected");
-              setoptions({ ...options, status: value, page: 1 });
-            }}
-          >
-            <SelectTrigger id="status" className="w-44">
-              <SelectValue placeholder="Filter status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="search">Search</Label>
-          <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="search"
-              className="pl-10 w-72"
-              placeholder="Name, email, phone..."
-              value={options.q || ""}
-              onChange={(e) => {
-                setoptions({ ...options, q: e.target.value, page: 1 });
+      <div className="flex flex-wrap justify-between items-center mb-6">
+        <h1 className="text-xl md:text-2xl font-semibold">Manage Users</h1>
+        {filteredUsers && (
+          <div className="flex gap-3 items-center">
+            <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs text-brand-accent">Total</div>
+              <div className="text-base text-brand-accent font-semibold">
+                {pagination?.total || filteredUsers.length}
+              </div>
+            </div>
+            <div className="bg-brand-secondary/40  text-brand-secondary  rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs">Investors</div>
+              <div className="text-base font-semibold">
+                {filteredUsers.filter((u) => u.role === "investor").length}
+              </div>
+            </div>
+            <div className="bg-brand-accent/20  text-brand  rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs">Startups</div>
+              <div className="text-base font-semibold">
+                {filteredUsers.filter((u) => u.role === "startup").length}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="my-6 p-4   border rounded-lg ">
+        <h2 className="font-medium  mb-3">Filter Users</h2>
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="grid gap-1.5">
+            <Label
+              htmlFor="status"
+              className="text-sm font-medium text-muted-foreground"
+            >
+              Status
+            </Label>
+            <Select
+              value={options.status || "all"}
+              onValueChange={(v) => {
+                const value =
+                  v === "all"
+                    ? undefined
+                    : (v as "pending" | "approved" | "rejected");
+                setoptions({ ...options, status: value, page: 1 });
               }}
-            />
+            >
+              <SelectTrigger id="status" className="w-44">
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label
+              htmlFor="role"
+              className="text-sm font-medium text-muted-foreground"
+            >
+              Role
+            </Label>
+            <Select
+              value={options.role || "all"}
+              onValueChange={(v) => {
+                const value =
+                  v === "all" ? undefined : (v as "investor" | "startup");
+                setoptions({ ...options, role: value, page: 1 });
+              }}
+            >
+              <SelectTrigger id="role" className="w-36">
+                <SelectValue placeholder="Filter role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="investor">Investor</SelectItem>
+                <SelectItem value="startup">Startup</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-1.5 flex-grow">
+            <Label
+              htmlFor="search"
+              className="text-sm font-medium text-muted-foreground"
+            >
+              Search
+            </Label>
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="search"
+                className="pl-10"
+                placeholder="Name, email, phone..."
+                value={options.q || ""}
+                onChange={(e) => {
+                  setoptions({ ...options, q: e.target.value, page: 1 });
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-1.5 min-w-[250px]">
+            <Label
+              htmlFor="show-submitted"
+              className="text-sm font-medium text-muted-foreground"
+            >
+              Submission Status
+            </Label>
+            <div className="flex items-center gap-2 bg-background rounded-md border px-3 py-2">
+              <Checkbox
+                id="show-all"
+                checked={options.onlySubmitted === false}
+                onCheckedChange={(checked) => {
+                  setoptions({
+                    ...options,
+                    onlySubmitted: !checked,
+                    page: 1,
+                  });
+                }}
+              />
+              <Label
+                htmlFor="show-all"
+                className="text-sm font-medium leading-none cursor-pointer select-none"
+              >
+                Show All Users (including unsubmitted)
+              </Label>
+            </div>
           </div>
         </div>
       </div>
@@ -328,78 +448,17 @@ const Users = () => {
         </Table>
 
         {/* Pagination Controls */}
-        {pagination && pagination.pages > 1 && (
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredUsers?.length || 0} of {pagination.total} users
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.page <= 1}
-                onClick={() =>
-                  setoptions({ ...options, page: options.page - 1 })
-                }
-              >
-                Previous
-              </Button>
-
-              <div className="flex items-center gap-1">
-                {Array.from(
-                  { length: Math.min(5, pagination.pages) },
-                  (_, i) => {
-                    // Logic to show pages around current page
-                    let pageNum;
-                    const middlePage = Math.min(3, Math.floor(5 / 2) + 1);
-
-                    if (pagination.pages <= 5) {
-                      // If total pages are 5 or fewer, show all pages
-                      pageNum = i + 1;
-                    } else if (pagination.page <= middlePage) {
-                      // If current page is near the start
-                      pageNum = i + 1;
-                    } else if (
-                      pagination.page >=
-                      pagination.pages - middlePage + 1
-                    ) {
-                      // If current page is near the end
-                      pageNum = pagination.pages - 5 + i + 1;
-                    } else {
-                      // Current page is in the middle
-                      pageNum = pagination.page - middlePage + i + 1;
-                    }
-
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={
-                          pageNum === pagination.page ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() =>
-                          setoptions({ ...options, page: pageNum })
-                        }
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  }
-                )}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.page >= pagination.pages}
-                onClick={() =>
-                  setoptions({ ...options, page: options.page + 1 })
-                }
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+        {pagination && pagination.pages > 0 && (
+          <Pagination
+            pagination={pagination}
+            isFetching={isFetching}
+            limit={options.limit}
+            setLimit={setLimit}
+            page={options.page}
+            setPage={setPage}
+            showingUsers={filteredUsers?.length || 0}
+            totalUsers={pagination.total || 0}
+          />
         )}
       </div>
 

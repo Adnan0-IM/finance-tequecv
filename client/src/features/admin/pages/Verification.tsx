@@ -2,12 +2,13 @@ import DashboardNavigation from "@/components/layout/DashboardLayout";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { optionsType } from "@/types/admin";
 import { useUsers, useVerifyUser } from "../api/adminQueries";
-import VerificationToolbar from "../components/verification/Toolbar";
+import VerificationToolbar, {
+  type RoleFilter,
+} from "../components/verification/Toolbar";
 import VerificationTable from "../components/verification/Table";
 import Pagination from "../components/verification/Pagination";
 import RejectDialog from "../components/verification/RejectDialog";
 import { useLocation, useNavigate } from "react-router";
-import type { User } from "@/types/users";
 
 const Verification = () => {
   // Filters and pagination
@@ -16,8 +17,7 @@ const Verification = () => {
   const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
-  // Define a new type that includes "all" as a valid option
-  type RoleFilter = User["role"] | "all";
+  // Use the RoleFilter type imported from Toolbar component
   const [role, setRole] = useState<RoleFilter>("investor");
 
   // Rejection dialog state
@@ -49,14 +49,11 @@ const Verification = () => {
   // Build query options
   const options = useMemo(() => {
     // Create the base options object
-    const opts: {
-      page: number;
-      limit: number;
-      q?: string;
-      status?: optionsType["status"];
-    } = {
+    const opts: optionsType = {
       page,
       limit,
+      excludeAdmin: true, // Always exclude admin users
+      onlySubmitted: true, // Always show only submitted verification docs
     };
 
     // Only add status to query if it's defined
@@ -69,33 +66,68 @@ const Verification = () => {
       opts.q = q;
     }
 
+    // Add role filter if not "all"
+    if (role !== "all") {
+      opts.role = role as "investor" | "startup" | "admin";
+    }
+
     return opts;
-  }, [page, limit, status, q]);
+  }, [page, limit, status, q, role]);
 
   // Data + actions
   const { data, isPending, isFetching, isError, error } = useUsers(options);
   const { mutate: verifyUser, isPending: verifying } = useVerifyUser();
 
-  const users = data?.users ?? [];
+  // Users come pre-filtered from the API now
+  const filteredSubmittedVerificationUsers = data?.users ?? [];
   const pagination = data?.pagination;
 
-  // First filter out admin users
-  const filteredUsersWithoutAdmin = users.filter(
-    (user) => user.role !== "admin"
+  // Fetch all users with different statuses to populate the stats
+  const allStatusOptions = useMemo(
+    () => ({
+      ...options,
+      status: undefined,
+      page: 1,
+      limit: 1, // We only need the count, not the actual users
+    }),
+    [options]
   );
 
-  // Then filter by role - handle "all" as a special case
-  const filteredUsersByRole =
-    role === "all"
-      ? filteredUsersWithoutAdmin.filter(
-          (user) => user.role === "investor" || user.role === "startup"
-        )
-      : filteredUsersWithoutAdmin.filter((user) => user.role === role);
-
-  // Finally, filter by verification submission
-  const filteredSubmittedVerificationUsers = filteredUsersByRole.filter(
-    (user) => user.verification?.submittedAt
+  const pendingOptions = useMemo(
+    () => ({
+      ...options,
+      status: "pending" as const,
+      page: 1,
+      limit: 1,
+    }),
+    [options]
   );
+
+  const approvedOptions = useMemo(
+    () => ({
+      ...options,
+      status: "approved" as const,
+      page: 1,
+      limit: 1,
+    }),
+    [options]
+  );
+
+  const rejectedOptions = useMemo(
+    () => ({
+      ...options,
+      status: "rejected" as const,
+      page: 1,
+      limit: 1,
+    }),
+    [options]
+  );
+
+  const { data: allUsersData } = useUsers(allStatusOptions);
+  const { data: pendingUsersData } = useUsers(pendingOptions);
+  const { data: approvedUsersData } = useUsers(approvedOptions);
+  const { data: rejectedUsersData } = useUsers(rejectedOptions);
+
   // Handlers
   const onApprove = useCallback(
     (userId: string) => {
@@ -130,12 +162,43 @@ const Verification = () => {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [status, limit]);
+  }, [status, limit, role]);
 
   return (
     <DashboardNavigation>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Verification</h2>
+      <div className="flex flex-wrap justify-between items-center mb-6">
+        <h1 className="text-xl md:text-2xl font-semibold">Verification</h1>
+
+        {/* Statistics Cards */}
+        <div className="flex gap-3 items-center mt-2 md:mt-0">
+          <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+            <div className="text-xs text-brand-accent">Total</div>
+            <div className="text-base text-brand-accent font-semibold">
+              {allUsersData?.pagination?.total || 0}
+            </div>
+          </div>
+
+          <div className="bg-yellow-100 text-yellow-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+            <div className="text-xs">Pending</div>
+            <div className="text-base font-semibold">
+              {pendingUsersData?.pagination?.total || 0}
+            </div>
+          </div>
+
+          <div className="bg-green-100 text-green-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+            <div className="text-xs">Approved</div>
+            <div className="text-base font-semibold">
+              {approvedUsersData?.pagination?.total || 0}
+            </div>
+          </div>
+
+          <div className="bg-red-100 text-red-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+            <div className="text-xs">Rejected</div>
+            <div className="text-base font-semibold">
+              {rejectedUsersData?.pagination?.total || 0}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -162,14 +225,18 @@ const Verification = () => {
       />
 
       {/* Pagination */}
-      <Pagination
-        isFetching={isFetching}
-        limit={limit}
-        page={page}
-        pagination={pagination}
-        setLimit={setLimit}
-        setPage={setPage}
-      />
+      {pagination?.pages && pagination.pages > 0 ? (
+        <Pagination
+          isFetching={isFetching}
+          limit={limit}
+          page={page}
+          pagination={pagination}
+          setLimit={setLimit}
+          setPage={setPage}
+          showingUsers={filteredSubmittedVerificationUsers.length || 0}
+          totalUsers={pagination?.total || 0}
+        />
+      ) : null}
 
       {/* Reject dialog */}
       <RejectDialog
