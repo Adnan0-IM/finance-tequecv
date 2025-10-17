@@ -10,6 +10,9 @@ import Pagination from "../components/verification/Pagination";
 import RejectDialog from "../components/verification/RejectDialog";
 import { useLocation, useNavigate } from "react-router";
 
+import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
+import { getAdminAnimation } from "@/utils/adminAnimations";
+
 const Verification = () => {
   // Filters and pagination
   const [status, setStatus] = useState<optionsType["status"]>("pending");
@@ -166,88 +169,90 @@ const Verification = () => {
 
   return (
     <DashboardNavigation>
-      <div className="flex flex-wrap justify-between items-center mb-6">
-        <h1 className="text-xl md:text-2xl font-semibold">Verification</h1>
+      <AdminPageWrapper {...getAdminAnimation("verification")}>
+        <div className="flex flex-wrap justify-between items-center mb-6">
+          <h1 className="text-xl md:text-2xl font-semibold">Verification</h1>
 
-        {/* Statistics Cards */}
-        <div className="flex gap-3 items-center mt-2 md:mt-0">
-          <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
-            <div className="text-xs text-brand-accent">Total</div>
-            <div className="text-base text-brand-accent font-semibold">
-              {allUsersData?.pagination?.total || 0}
+          {/* Statistics Cards */}
+          <div className="flex gap-3 items-center mt-2 md:mt-0">
+            <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs text-brand-accent">Total</div>
+              <div className="text-base text-brand-accent font-semibold">
+                {allUsersData?.pagination?.total || 0}
+              </div>
             </div>
-          </div>
 
-          <div className="bg-yellow-100 text-yellow-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
-            <div className="text-xs">Pending</div>
-            <div className="text-base font-semibold">
-              {pendingUsersData?.pagination?.total || 0}
+            <div className="bg-yellow-100 text-yellow-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs">Pending</div>
+              <div className="text-base font-semibold">
+                {pendingUsersData?.pagination?.total || 0}
+              </div>
             </div>
-          </div>
 
-          <div className="bg-green-100 text-green-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
-            <div className="text-xs">Approved</div>
-            <div className="text-base font-semibold">
-              {approvedUsersData?.pagination?.total || 0}
+            <div className="bg-green-100 text-green-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs">Approved</div>
+              <div className="text-base font-semibold">
+                {approvedUsersData?.pagination?.total || 0}
+              </div>
             </div>
-          </div>
 
-          <div className="bg-red-100 text-red-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
-            <div className="text-xs">Rejected</div>
-            <div className="text-base font-semibold">
-              {rejectedUsersData?.pagination?.total || 0}
+            <div className="bg-red-100 text-red-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
+              <div className="text-xs">Rejected</div>
+              <div className="text-base font-semibold">
+                {rejectedUsersData?.pagination?.total || 0}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Toolbar */}
-      <VerificationToolbar
-        search={search}
-        setSearch={setSearch}
-        status={status}
-        setStatus={setStatus}
-        role={role}
-        setRole={setRole}
-      />
-
-      {/* Table */}
-      <VerificationTable
-        users={filteredSubmittedVerificationUsers}
-        error={error as Error | null}
-        isError={isError}
-        isFetching={isFetching}
-        isPending={isPending}
-        verifying={verifying}
-        onApprove={onApprove}
-        onReject={onReject}
-        onViewDetails={onViewDetails}
-      />
-
-      {/* Pagination */}
-      {pagination?.pages && pagination.pages > 0 ? (
-        <Pagination
-          isFetching={isFetching}
-          limit={limit}
-          page={page}
-          pagination={pagination}
-          setLimit={setLimit}
-          setPage={setPage}
-          showingUsers={filteredSubmittedVerificationUsers.length || 0}
-          totalUsers={pagination?.total || 0}
+        {/* Toolbar */}
+        <VerificationToolbar
+          search={search}
+          setSearch={setSearch}
+          status={status}
+          setStatus={setStatus}
+          role={role}
+          setRole={setRole}
         />
-      ) : null}
 
-      {/* Reject dialog */}
-      <RejectDialog
-        open={rejectOpen}
-        onOpenChange={(o) => {
-          setRejectOpen(o);
-          if (!o) setRejectUserId(null);
-        }}
-        onConfirm={onConfirmReject}
-        loading={verifying}
-      />
+        {/* Table */}
+        <VerificationTable
+          users={filteredSubmittedVerificationUsers}
+          error={error as Error | null}
+          isError={isError}
+          isFetching={isFetching}
+          isPending={isPending}
+          verifying={verifying}
+          onApprove={onApprove}
+          onReject={onReject}
+          onViewDetails={onViewDetails}
+        />
+
+        {/* Pagination */}
+        {pagination?.pages && pagination.pages > 0 ? (
+          <Pagination
+            isFetching={isFetching}
+            limit={limit}
+            page={page}
+            pagination={pagination}
+            setLimit={setLimit}
+            setPage={setPage}
+            showingUsers={filteredSubmittedVerificationUsers.length || 0}
+            totalUsers={pagination?.total || 0}
+          />
+        ) : null}
+
+        {/* Reject dialog */}
+        <RejectDialog
+          open={rejectOpen}
+          onOpenChange={(o) => {
+            setRejectOpen(o);
+            if (!o) setRejectUserId(null);
+          }}
+          onConfirm={onConfirmReject}
+          loading={verifying}
+        />
+      </AdminPageWrapper>
     </DashboardNavigation>
   );
 };

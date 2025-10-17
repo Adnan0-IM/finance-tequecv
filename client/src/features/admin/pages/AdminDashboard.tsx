@@ -29,6 +29,9 @@ import { useNavigate } from "react-router";
 import type { User } from "@/types/users";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 
+import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
+import { getAdminAnimation } from "@/utils/adminAnimations";
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, setAllStats } = useAuth();
@@ -51,10 +54,14 @@ const AdminDashboard = () => {
   const stats = useMemo(() => {
     const totalUsers = users.length;
     const adminUsers = users.filter((u) => u.role === "admin").length;
-    const totalUsersWithoutAdmins = users.filter((u) => u.role !== "admin").length;
+    const totalUsersWithoutAdmins = users.filter(
+      (u) => u.role !== "admin"
+    ).length;
     const startupUsers = users.filter((u) => u.role === "startup").length;
     const investorUsers = users.filter((u) => u.role === "investor").length;
-    const verifiedUsers = usersWithoutAdmins.filter((u) => u.verification?.status === "approved").length;
+    const verifiedUsers = usersWithoutAdmins.filter(
+      (u) => u.verification?.status === "approved"
+    ).length;
     const pendingVerification = usersWithoutAdmins.filter(
       (u) => u.verification?.status === "pending"
     ).length;
@@ -70,7 +77,7 @@ const AdminDashboard = () => {
     };
   }, [users, usersWithoutAdmins]);
 
-  setAllStats(stats)
+  setAllStats(stats);
   // Sort recent users by creation date
   const recentUsersAll = useMemo(() => {
     return users
@@ -161,337 +168,358 @@ const AdminDashboard = () => {
 
   return (
     <DashboardNavigation>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between">
-          <div className="flex flex-col lg:flex-row items-center  lg:gap-4 lg:mb-4">
+      <AdminPageWrapper {...getAdminAnimation("dashboard")}>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between">
+            <div className="flex flex-col lg:flex-row items-center  lg:gap-4 lg:mb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 bg-brand-primary rounded-lg flex items-center justify-center">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-brand-dark">
+                  Finance Teque
+                </h1>
+              </div>
+              <sub className="text-muted-foreground text-base hidden sm:block font-bold ml-5 lg:ml-0">
+                Admin Dashboard
+              </sub>
+            </div>
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-brand-primary rounded-lg flex items-center justify-center">
-                <Users className="h-5 w-5 text-white" />
+              <div className="relative">
+                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 w-64 bg-white"
+                />
               </div>
-              <h1 className="text-2xl font-bold text-brand-dark">
-                Finance Teque
-              </h1>
-            </div>
-            <sub className="text-muted-foreground text-base hidden sm:block font-bold ml-5 lg:ml-0">
-              Admin Dashboard
-            </sub>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 w-64 bg-white"
-              />
             </div>
           </div>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Total Users */}
-          <Card className="bg-brand-primary shadow-sm hover:shadow-md text-white overflow-hidden relative">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Users className="h-6 w-6" />
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Total Users */}
+            <Card className="bg-brand-primary shadow-sm hover:shadow-md text-white overflow-hidden relative">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Total Users</h3>
+                    <p className="text-white/80 text-sm">
+                      All registered users
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">Total Users</h3>
-                  <p className="text-white/80 text-sm">All registered users</p>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold">
+                    {user?.isSuper
+                      ? stats.totalUsers
+                      : stats.totalUsersWithoutAdmins}
+                  </span>
                 </div>
-              </div>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">{user?.isSuper ? stats.totalUsers : stats.totalUsersWithoutAdmins}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white/20 w-full py-4 justify-between"
-                onClick={() => navigate("/admin/users")}
-              >
-                View All Users
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20 w-full py-4 justify-between"
+                  onClick={() => navigate("/admin/users")}
+                >
+                  View All Users
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
 
-          {/* Investors Users */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow border-brand-secondary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="h-12 w-12 bg-brand-secondary/10 rounded-xl flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-brand-secondary" />
+            {/* Investors Users */}
+            <Card className="shadow-sm hover:shadow-md transition-shadow border-brand-secondary/20">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 bg-brand-secondary/10 rounded-xl flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-brand-secondary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-brand-dark">Investors</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Capital Providers
+                    </p>
+                  </div>
                 </div>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-brand-dark">
+                    {stats.investorUsers}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-brand-secondary hover:bg-brand-secondary/10 py-4 w-full justify-between"
+                  onClick={() => navigate("/admin/verification?role=investor")}
+                >
+                  View all investors
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Startup Users */}
+            <Card className="hover:shadow-md transition-shadow border-brand-accent/20">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 bg-brand-accent/10 rounded-xl flex items-center justify-center">
+                    <UserCheck className="h-6 w-6 text-brand-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-brand-dark">Startups</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Seeking Investment
+                    </p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-brand-dark">
+                    {stats.startupUsers}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-brand-accent hover:bg-brand-accent/10 w-full py-4  justify-between"
+                  onClick={() => navigate("/admin/verification?role=startup")}
+                >
+                  View all startups
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Users Table */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="font-semibold text-brand-dark">Investors</h3>
+                  <h2 className="text-lg font-semibold text-brand-dark">
+                    Recent Users
+                  </h2>
                   <p className="text-muted-foreground text-sm">
-                    Capital Providers
+                    {recentUsers.length} recent users
                   </p>
                 </div>
+                <Button
+                  variant="ghost"
+                  className="text-brand-primary hover:text-brand-primary-dark hover:bg-brand-primary/10"
+                  onClick={() => navigate("/admin/users")}
+                >
+                  See More <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </div>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-brand-dark">
-                  {stats.investorUsers}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-brand-secondary hover:bg-brand-secondary/10 py-4 w-full justify-between"
-                onClick={() => navigate("/admin/verification?role=investor")}
-              >
-                View all investors
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
 
-          {/* Startup Users */}
-          <Card className="hover:shadow-md transition-shadow border-brand-accent/20">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="h-12 w-12 bg-brand-accent/10 rounded-xl flex items-center justify-center">
-                  <UserCheck className="h-6 w-6 text-brand-accent" />
+              {isError ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Failed to load users
                 </div>
-                <div>
-                  <h3 className="font-semibold text-brand-dark">Startups</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Seeking Investment
-                  </p>
-                </div>
-              </div>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-brand-dark">
-                  {stats.startupUsers}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-brand-accent hover:bg-brand-accent/10 w-full py-4  justify-between"
-                onClick={() => navigate("/admin/verification?role=startup")}
-              >
-                View all startups
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Users Table */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-semibold text-brand-dark">
-                  Recent Users
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  {recentUsers.length} recent users
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                className="text-brand-primary hover:text-brand-primary-dark hover:bg-brand-primary/10"
-                onClick={() => navigate("/admin/users")}
-              >
-                See More <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-
-            {isError ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Failed to load users
-              </div>
-            ) : (
-              <div className="my-4 w-full overflow-y-auto">
-                <Table>
-                  <TableCaption>
-                    {isPending
-                      ? "Loading users..."
-                      : "A list of Finance Teque Users."}
-                  </TableCaption>
-                  <TableHeader>
-                    <TableRow className="even:bg-muted m-0 border-t p-0">
-                      <TableHead className="border px-4 py-2 text-left font-bold">
-                        FULL NAME
-                      </TableHead>
-                      <TableHead className="border px-4 py-2 text-left font-bold">
-                        EMAIL ADDRESS
-                      </TableHead>
-                      <TableHead className="border px-4 py-2 text-left font-bold">
-                        ROLE/TYPE
-                      </TableHead>
-                      <TableHead className="border px-4 py-2 text-left font-bold">
-                        SUBMITTED
-                      </TableHead>
-                      <TableHead className="border px-4 py-2 text-left font-bold">
-                        STATUS
-                      </TableHead>
-                      <TableHead className="border px-4 py-2 text-left font-bold">
-                        ACTIONS
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRecentUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={6}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          {search
-                            ? "No users found matching your search"
-                            : "No users found"}
-                        </TableCell>
+              ) : (
+                <div className="my-4 w-full overflow-y-auto">
+                  <Table>
+                    <TableCaption>
+                      {isPending
+                        ? "Loading users..."
+                        : "A list of Finance Teque Users."}
+                    </TableCaption>
+                    <TableHeader>
+                      <TableRow className="even:bg-muted m-0 border-t p-0">
+                        <TableHead className="border px-4 py-2 text-left font-bold">
+                          FULL NAME
+                        </TableHead>
+                        <TableHead className="border px-4 py-2 text-left font-bold">
+                          EMAIL ADDRESS
+                        </TableHead>
+                        <TableHead className="border px-4 py-2 text-left font-bold">
+                          ROLE/TYPE
+                        </TableHead>
+                        <TableHead className="border px-4 py-2 text-left font-bold">
+                          SUBMITTED
+                        </TableHead>
+                        <TableHead className="border px-4 py-2 text-left font-bold">
+                          STATUS
+                        </TableHead>
+                        <TableHead className="border px-4 py-2 text-left font-bold">
+                          ACTIONS
+                        </TableHead>
                       </TableRow>
-                    ) : (
-                      filteredRecentUsers.map((user: User) => {
-                        const submittedAt = user.verification?.submittedAt;
-                        const status: "pending" | "approved" | "rejected" =
-                          user.verification?.status || "pending";
-
-                        return (
-                          <TableRow
-                            key={user._id}
-                            className="even:bg-brand-light hover:bg-brand-light/50 m-0 border-t p-0"
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRecentUsers.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center py-8 text-muted-foreground"
                           >
-                            <TableCell className="border px-4 py-2">
-                              {user.verification?.personal
-                                ? `${user.verification.personal.firstName} ${user.verification.personal.surname}`
-                                : user.name || "-"}
-                            </TableCell>
-                            <TableCell className="border px-4 py-2">
-                              {user.email}
-                            </TableCell>
-                            <TableCell className="border px-4 py-2">
-                              {user.investorType !== "none" &&
-                                user.investorType}{" "}
-                              {user.role}
-                            </TableCell>
-                            <TableCell className="border px-4 py-2">
-                              <div className="flex items-center gap-1">
-                                {submittedAt && (
-                                  <Calendar className="h-3 w-3" />
-                                )}
-                                <span className="text-sm">
-                                  {submittedAt
-                                    ? new Date(submittedAt).toLocaleString()
-                                    : "Not submitted"}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="border px-4 py-2">
-                              <Badge
-                                variant={
-                                  status === "approved"
-                                    ? "default"
-                                    : status === "rejected"
-                                    ? "destructive"
-                                    : "secondary"
-                                }
-                              >
-                                {user.role === "admin" ? "Admin" : status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="border px-4 py-2">
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="border"
-                                  onClick={() =>
-                                    navigate(`/admin/verification/${user._id}`)
+                            {search
+                              ? "No users found matching your search"
+                              : "No users found"}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredRecentUsers.map((user: User) => {
+                          const submittedAt = user.verification?.submittedAt;
+                          const status: "pending" | "approved" | "rejected" =
+                            user.verification?.status || "pending";
+
+                          return (
+                            <TableRow
+                              key={user._id}
+                              className="even:bg-brand-light hover:bg-brand-light/50 m-0 border-t p-0"
+                            >
+                              <TableCell className="border px-4 py-2">
+                                {user.verification?.personal
+                                  ? `${user.verification.personal.firstName} ${user.verification.personal.surname}`
+                                  : user.name || "-"}
+                              </TableCell>
+                              <TableCell className="border px-4 py-2">
+                                {user.email}
+                              </TableCell>
+                              <TableCell className="border px-4 py-2">
+                                {user.investorType !== "none" &&
+                                  user.investorType}{" "}
+                                {user.role}
+                              </TableCell>
+                              <TableCell className="border px-4 py-2">
+                                <div className="flex items-center gap-1">
+                                  {submittedAt && (
+                                    <Calendar className="h-3 w-3" />
+                                  )}
+                                  <span className="text-sm">
+                                    {submittedAt
+                                      ? new Date(submittedAt).toLocaleString()
+                                      : "Not submitted"}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="border px-4 py-2">
+                                <Badge
+                                  variant={
+                                    status === "approved"
+                                      ? "default"
+                                      : status === "rejected"
+                                      ? "destructive"
+                                      : "secondary"
                                   }
                                 >
-                                  View
-                                  <ArrowRight />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Stats Row */}
-        <div className={`grid grid-cols-2  gap-4 ${user?.isSuper ? "md:grid-cols-3 lg:grid-cols-6" : "md:grid-cols-3 lg:grid-cols-5"}`}>
-   {
-            user?.isSuper && (
-
-          <Card className="border-orange-500/30 hover:shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-orange-700">
-                {stats.adminUsers}
-              </div>
-              <div className="text-sm text-muted-foreground">Admin Users</div>
-            </CardContent>
-          </Card>)
-          }
-          <Card className="border-brand-primary/30 hover:shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-brand-primary">
-                {stats.verifiedUsers}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Verified Users
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-brand-secondary/30 hover:shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-brand-secondary">
-                {stats.pendingVerification}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Pending Verification
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-orange-500/30 hover:shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-orange-500">
-                {stats.investorUsers}
-              </div>
-              <div className="text-sm text-muted-foreground">Investor Users</div>
-            </CardContent>
-          </Card>
-          <Card className="border-brand-accent/30 hover:shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-brand-accent">
-                {stats.startupUsers}
-              </div>
-              <div className="text-sm text-muted-foreground">Startup Users</div>
-            </CardContent>
-          </Card>
-       
-          <Card className="border-brand-primary/30 hover:shadow-sm">
-            <CardContent className="p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <TrendingUp className="h-4 w-4 text-brand-primary" />
-                <div className="text-2xl font-bold text-brand-primary">
-                  {Math.round((stats.verifiedUsers / stats.totalUsers) * 100) ||
-                    0}
-                  %
+                                  {user.role === "admin" ? "Admin" : status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="border px-4 py-2">
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="border"
+                                    onClick={() =>
+                                      navigate(
+                                        `/admin/verification/${user._id}`
+                                      )
+                                    }
+                                  >
+                                    View
+                                    <ArrowRight />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Verification Rate
-              </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Quick Stats Row */}
+          <div
+            className={`grid grid-cols-2  gap-4 ${
+              user?.isSuper
+                ? "md:grid-cols-3 lg:grid-cols-6"
+                : "md:grid-cols-3 lg:grid-cols-5"
+            }`}
+          >
+            {user?.isSuper && (
+              <Card className="border-orange-500/30 hover:shadow-sm">
+                <CardContent className="p-3 text-center">
+                  <div className="text-2xl font-bold text-orange-700">
+                    {stats.adminUsers}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Admin Users
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            <Card className="border-brand-primary/30 hover:shadow-sm">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-brand-primary">
+                  {stats.verifiedUsers}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Verified Users
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-brand-secondary/30 hover:shadow-sm">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-brand-secondary">
+                  {stats.pendingVerification}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Pending Verification
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-orange-500/30 hover:shadow-sm">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-orange-500">
+                  {stats.investorUsers}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Investor Users
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-brand-accent/30 hover:shadow-sm">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-brand-accent">
+                  {stats.startupUsers}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Startup Users
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-brand-primary/30 hover:shadow-sm">
+              <CardContent className="p-3 text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <TrendingUp className="h-4 w-4 text-brand-primary" />
+                  <div className="text-2xl font-bold text-brand-primary">
+                    {Math.round(
+                      (stats.verifiedUsers / stats.totalUsers) * 100
+                    ) || 0}
+                    %
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Verification Rate
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </AdminPageWrapper>
     </DashboardNavigation>
   );
 };

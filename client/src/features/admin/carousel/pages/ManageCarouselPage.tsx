@@ -61,6 +61,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
+import { getAdminAnimation } from "@/utils/adminAnimations";
 
 // Accept http(s) URLs or site-relative paths starting with "/"
 const webPathSchema = z
@@ -278,6 +280,7 @@ const ManageCarouselPage = () => {
 
   return (
     <DashboardNavigation>
+      <AdminPageWrapper {...getAdminAnimation("carousel")}>
       <div className="mx-auto w-full max-w-6xl  space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -737,6 +740,7 @@ const ManageCarouselPage = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      </AdminPageWrapper>
     </DashboardNavigation>
   );
 };

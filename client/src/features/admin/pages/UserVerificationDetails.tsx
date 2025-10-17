@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 
+import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
+
 const UserVerificationDetails = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -268,6 +270,7 @@ const UserVerificationDetails = () => {
   if (user.investorType === "corporate")
     return (
       <DashboardNavigation>
+        <AdminPageWrapper variant="zoom">
         <div className="space-y-6 max-w-6xl mx-auto">
           {/* Header */}
           <div className="">
@@ -670,10 +673,12 @@ const UserVerificationDetails = () => {
             )}
           </DialogContent>
         </Dialog>
+    </AdminPageWrapper>
       </DashboardNavigation>
     );
   return (
     <DashboardNavigation>
+      <AdminPageWrapper variant="zoom">
       <div className=" space-y-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="">
@@ -1049,6 +1054,7 @@ const UserVerificationDetails = () => {
           </div>
         </DialogContent>
       </Dialog>
+      </AdminPageWrapper>
     </DashboardNavigation>
   );
 };
