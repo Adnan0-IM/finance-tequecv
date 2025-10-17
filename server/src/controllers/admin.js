@@ -47,21 +47,21 @@ exports.getUsers = async (req, res) => {
     // Filter by role (if specified)
     if (role) {
       filter.role = role;
-      console.log(`Filtering by specific role: ${role}`);
+      
     }
     // Filter to exclude admin users if specified
     else if (req.query.excludeAdmin === "true") {
       filter.role = { $ne: "admin" };
-      console.log("Excluding admin users");
+      
     }
 
     // Filter only users who have submitted verification documents
     if (onlySubmitted) {
       filter["verification.submittedAt"] = { $exists: true };
-      console.log("Filtering only users who have submitted verification");
+     
     }
 
-    console.log("Final filter:", JSON.stringify(filter, null, 2));
+   
 
     // Search filter
     if (q) {
