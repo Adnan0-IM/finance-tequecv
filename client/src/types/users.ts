@@ -94,6 +94,23 @@ export type VerificationData = {
   submittedAt?: string;
 };
 
+export type AdminPermissions = {
+  manageUsers: boolean;
+  manageSubAdmins: boolean; // Only for super admins
+  manageVerifications: boolean;
+  manageContent: boolean;
+  manageSettings: boolean;
+  viewReports: boolean;
+  viewLogs: boolean;
+};
+
+export type AdminActivity = {
+  action: string;
+  timestamp: string;
+  details: string;
+  targetId?: string;
+};
+
 export type User = {
   _id: string;
   name?: string;
@@ -104,5 +121,10 @@ export type User = {
   investorType?: "personal" | "corporate" | "none";
   isVerified: boolean;
   createdAt?: string;
+  lastLogin?: string;
   verification?: VerificationData;
+  // Admin-specific properties
+  permissions?: AdminPermissions;
+  recentActivity?: AdminActivity[];
+  createdBy?: string; // ID of admin who created this admin (for sub-admins)
 };

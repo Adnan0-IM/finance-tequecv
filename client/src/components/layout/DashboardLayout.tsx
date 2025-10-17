@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router";
+import { NavLink, useNavigate,  } from "react-router";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useSwipeable } from "react-swipeable";
 import {
   User,
   Home,
@@ -16,7 +17,9 @@ import {
   RectangleHorizontal,
   Verified,
 } from "lucide-react";
+import SwipeableLayout from "./SwipeableLayout";
 import { Button } from "@/components/ui/button";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -35,6 +38,24 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = window.location;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Keep the swipe navigation for page transitions
+  const [enableSwipe] = useLocalStorage("enableSwipeNavigation", false);
+
+  // Configure swipe handlers for mobile menu
+  const swipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (!isMobileMenuOpen) setIsMobileMenuOpen(true);
+    },
+    onSwipedLeft: () => {
+      if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+    },
+    trackMouse: false,
+    swipeDuration: 500,
+    preventScrollOnSwipe: false,
+    trackTouch: true,
+    delta: 50, // Sensitivity threshold
+    rotationAngle: 0,
+  });
 
   const navLinksAdmin = [
     { title: "Dashboard", path: "/admin", icon: Home },
@@ -107,7 +128,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div {...swipeHandlers} className="min-h-screen bg-background">
       {/* Sidebar Navigation (desktop) and Mobile Navigation */}
       {/* Desktop Sidebar */}
       <div
@@ -172,61 +193,119 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
         <MobileMenuMotion>
           <div
             onClick={() => setIsMobileMenuOpen(false)}
-            className="md:hidden fixed inset-0 z-50 bg-gray-50 bg-opacity-50"
+            className="md:hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
           >
-            <div className="fixed inset-y-0 left-0 w-[80%] bg-white shadow-lg">
-              <div className="flex items-center justify-between h-20 px-4 border-b">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="size-10">
-                    <AvatarFallback>{getInitials()}</AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-lg truncate max-w-[150px]">
-                    {user?.name}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-white shadow-xl  overflow-hidden"
+            >
+             
+              {/* Header with Logo */}
+              <div className="h-20 px-4 flex items-center justify-between border-b border-gray-100">
+                <div className="flex gap-2 items-center">
+                  <img
+                    src={logo}
+                    alt="Finance Teque Logo"
+                    className="h-10 w-auto object-contain"
+                  />
+                  <span className="text-base font-bold text-brand-dark line-clamp-2">
+                    Finance Teque Nigeria Limited
                   </span>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-gray-500 cursor-pointer hover:text-gray-700"
+                  className="text-gray-500 cursor-pointer hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
                 >
-                  <X className="size-6" />
+                  <X className="size-5" />
                 </button>
               </div>
-              <nav className="mt-5 px-2 space-y-3">
+
+              {/* User Profile Section */}
+              <div className="py-4 px-5 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-12 border-2 border-primary/10 shadow-sm">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <button
+                      onClick={() => {
+                        navigate("/profile");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="font-medium text-lg text-left truncate max-w-[170px] hover:text-primary transition-colors"
+                    >
+                      {user?.name}
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      {user?.role === "admin"
+                        ? user?.isSuper
+                          ? "Super Admin"
+                          : "Administrator"
+                        : user?.role === "investor"
+                        ? "Investor"
+                        : "Startup"}
+                    </span>
+                  </div>
+                </div>
+
+              
+              </div>
+
+              {/* Navigation Menu */}
+              <nav
+                className="mt-2 px-2 space-y-1.5 overflow-y-auto"
+                style={{ maxHeight: "calc(100vh - 200px)" }}
+              >
                 {navLinks.map((item) => {
                   const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
                   return (
                     <NavLink
                       key={item.title}
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={() =>
-                        `group flex items-center px-3 py-3 text-lg font-medium rounded-md ${
-                          location.pathname === item.path
-                            ? "bg-primary text-white"
-                            : "text-gray-700 hover:bg-gray-100"
+                        `group flex items-center px-3 py-2.5 text-lg font-medium rounded-md transition-all ${
+                          isActive
+                            ? "bg-primary text-white shadow-md"
+                            : "text-gray-700 hover:bg-gray-50"
                         }`
                       }
                     >
-                      <Icon
-                        className={`mr-3 h-5 w-5 ${
-                          location.pathname === item.path
-                            ? "text-white"
-                            : "text-gray-500 group-hover:text-gray-700"
-                        }`}
-                      />
+                      <div
+                        className={`mr-3 p-1.5  rounded-md
+                       bg-primary/5
+                        `}
+                      >
+                        <Icon
+                          className={`h-5 w-5 ${
+                            isActive
+                              ? "text-white"
+                              : "text-primary group-hover:text-primary/80"
+                          }`}
+                        />
+                      </div>
                       {item.title}
+
+                     
                     </NavLink>
                   );
                 })}
-                {/* Mobile Logout Button */}
-                <button
-                  onClick={handleLogout}
-                  className="group flex items-center cursor-pointer px-3 py-2 text-lg font-medium rounded-md text-red-600 hover:bg-red-50 w-full"
-                >
-                  <LogOut className="mr-3 h-5 w-5 text-red-500" />
-                  Log out
-                </button>
               </nav>
+
+              {/* Mobile Logout Button */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="w-full justify-center text-base items-center text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  <span>Log out</span>
+                </Button>
+              </div>
             </div>
           </div>
         </MobileMenuMotion>
@@ -259,17 +338,20 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
               </NavLink>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 md:hidden"
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
+            {/* Mobile Menu Button with swipe hint */}
+            <div className="md:hidden flex items-center space-x-1">
+            
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
 
             {/* Right Navigation Items */}
             <div className="hidden md:flex md:items-center md:space-x-4">
@@ -316,6 +398,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                         <span className="text-base">Settings</span>
                       </DropdownMenuItem>
                     )}
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -330,7 +413,30 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
           </div>
         </div>
 
-        <main className="p-4 sm:p-6">{children}</main>
+        <main className="p-4 sm:p-6">
+          {enableSwipe ? (
+            <>
+              <SwipeableLayout
+                navLinks={navLinks.map((link) => ({
+                  title: link.title,
+                  path: link.path,
+                }))}
+                pageTransitionProps={{
+                  variant: "slide",
+                  direction: "left",
+                  duration: 0.35,
+                }}
+                swipeThreshold={75}
+              >
+                {children}
+              </SwipeableLayout>
+
+        
+            </>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ const Pagination = ({
   };
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between mt-4">
       <div className="flex flex-col sm:flex-row items-center gap-2">
         <span className="text-sm hidden sm:block">Rows per page</span>
         <Select

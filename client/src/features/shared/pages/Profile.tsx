@@ -25,6 +25,11 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
+  Users,
+  UserCog,
+  Lock,
+  Settings,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -42,6 +47,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import DashboardNavigation from "@/components/layout/DashboardLayout";
+import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
+import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const updateSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -76,8 +83,20 @@ export function ProfilePage() {
     form.reset({ name: user?.name || "", phone: user?.phone || "" });
   }, [user, form]);
 
-  // Derive verification status more accurately
+  // Check if user is admin (either super or regular)
+  const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
+
+  // Check if user is super admin
+  const isSuperAdmin = useMemo(
+    () => isAdmin && user?.isSuper === true,
+    [isAdmin, user?.isSuper]
+  );
+
+  // Derive verification status more accurately (only for non-admin users)
   const verificationStatus = useMemo(() => {
+    // Admins don't need verification
+    if (isAdmin) return "approved";
+
     if (user?.isVerified) {
       return "approved";
     }
@@ -94,7 +113,7 @@ export function ProfilePage() {
 
     // Default to pending if nothing else applies
     return "pending";
-  }, [user?.isVerified, user?.verification]);
+  }, [user?.isVerified, user?.verification, isAdmin]);
 
   const reviewedAt = user?.verification?.reviewedAt;
   const submittedAt = user?.verification?.submittedAt;
@@ -141,6 +160,8 @@ export function ProfilePage() {
 
   return (
     <DashboardNavigation>
+
+      <AdminPageWrapper {...getAdminAnimation("users")}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left sidebar with avatar and actions */}
@@ -199,7 +220,49 @@ export function ProfilePage() {
                   <ChevronRight className="w-4 h-4" />
                 </Button>
 
-                {!user?.isVerified && (
+                {/* Admin-specific navigation buttons */}
+                {isAdmin && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between border-gray-200 hover:text-gray-900 hover:border-brand-primary hover:bg-brand-light"
+                      onClick={() => navigate("/admin")}
+                    >
+                      <span className="flex items-center">
+                        <UserCog className="w-4 h-4 mr-2" />
+                        Admin Dashboard
+                      </span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between border-gray-200 hover:text-gray-900 hover:border-brand-primary hover:bg-brand-light"
+                      onClick={() => navigate("/admin/verification")}
+                    >
+                      <span className="flex items-center">
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        User Verifications
+                      </span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                    {user?.isSuper && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between border-gray-200 hover:text-gray-900 hover:border-brand-primary hover:bg-brand-light"
+                        onClick={() => navigate("/admin/sub-admins")}
+                      >
+                        <span className="flex items-center">
+                          <Users className="w-4 h-4 mr-2" />
+                          Manage Sub-Admins
+                        </span>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </>
+                )}
+
+                {/* Verification button for non-admin users */}
+                {!isAdmin && !user?.isVerified && (
                   <Button
                     variant="outline"
                     className="w-full justify-between border-gray-200 hover:text-gray-900 hover:border-brand-primary hover:bg-brand-light"
@@ -416,110 +479,142 @@ export function ProfilePage() {
               )}
             </div>
 
-            {/* KYC Verification data.status */}
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Verification status
-                </h3>
-              </div>
+            {/* KYC Verification status (only shown for non-admin users) */}
+            {!isAdmin && (
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Verification status
+                  </h3>
+                </div>
 
-              <div className="p-6">
-                <div
-                  className={cn(
-                    "rounded-lg border p-5",
-                    verificationStatus === "approved"
-                      ? "bg-green-50 border-green-100"
-                      : verificationStatus === "pending"
-                      ? "bg-yellow-50 border-yellow-100"
-                      : "bg-red-50 border-red-100"
-                  )}
-                >
-                  {verificationStatus === "approved" ? (
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-full bg-green-100 p-2 mt-1">
-                        <CheckCircle2 className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-green-700 mb-1">
-                          Account Fully Verified
-                        </h4>
-                        <p className="text-sm text-green-600 mb-3">
-                          Your account has been verified and you have full
-                          access to all features.
-                        </p>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span className="text-sm text-green-600">
-                              Identity verification complete
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span className="text-sm text-green-600">
-                              Address verification complete
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span className="text-sm text-green-600">
-                              Banking information verified
-                            </span>
-                          </div>
+                <div className="p-6">
+                  <div
+                    className={cn(
+                      "rounded-lg border p-5",
+                      verificationStatus === "approved"
+                        ? "bg-green-50 border-green-100"
+                        : verificationStatus === "pending"
+                        ? "bg-yellow-50 border-yellow-100"
+                        : "bg-red-50 border-red-100"
+                    )}
+                  >
+                    {verificationStatus === "approved" ? (
+                      <div className="flex items-start gap-4">
+                        <div className="rounded-full bg-green-100 p-2 mt-1">
+                          <CheckCircle2 className="h-6 w-6 text-green-600" />
                         </div>
-                        {reviewedAt && (
-                          <div className="mt-4 text-xs text-green-600">
-                            Verified on:{" "}
-                            {new Date(reviewedAt).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : verificationStatus === "pending" ? (
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-full bg-yellow-100 p-2 mt-1">
-                        <Clock className="h-6 w-6 text-yellow-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-yellow-700 mb-1">
-                          Verification In Progress
-                        </h4>
-                        <p className="text-sm text-yellow-600 mb-3">
-                          {submittedAt
-                            ? "We're reviewing your verification documents. This typically takes 1-2 business days."
-                            : "Your verification process has been started but not yet completed."}
-                        </p>
-                        <div className="space-y-2">
-                          {submittedAt ? (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-yellow-500" />
-                                <span className="text-sm text-yellow-600">
-                                  Documents submitted successfully
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-yellow-500" />
-                                <span className="text-sm text-yellow-600">
-                                  Verification in review
-                                </span>
-                              </div>
-                              <div className="mt-4 text-xs text-yellow-600">
-                                Submitted on:{" "}
-                                {new Date(submittedAt).toLocaleDateString()}
-                              </div>
-                            </>
-                          ) : (
+                        <div>
+                          <h4 className="font-semibold text-green-700 mb-1">
+                            Account Fully Verified
+                          </h4>
+                          <p className="text-sm text-green-600 mb-3">
+                            Your account has been verified and you have full
+                            access to all features.
+                          </p>
+                          <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-yellow-500" />
-                              <span className="text-sm text-yellow-600">
-                                Verification process initiated
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              <span className="text-sm text-green-600">
+                                Identity verification complete
                               </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              <span className="text-sm text-green-600">
+                                Address verification complete
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              <span className="text-sm text-green-600">
+                                Banking information verified
+                              </span>
+                            </div>
+                          </div>
+                          {reviewedAt && (
+                            <div className="mt-4 text-xs text-green-600">
+                              Verified on:{" "}
+                              {new Date(reviewedAt).toLocaleDateString()}
                             </div>
                           )}
                         </div>
-                        {!submittedAt && (
+                      </div>
+                    ) : verificationStatus === "pending" ? (
+                      <div className="flex items-start gap-4">
+                        <div className="rounded-full bg-yellow-100 p-2 mt-1">
+                          <Clock className="h-6 w-6 text-yellow-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-yellow-700 mb-1">
+                            Verification In Progress
+                          </h4>
+                          <p className="text-sm text-yellow-600 mb-3">
+                            {submittedAt
+                              ? "We're reviewing your verification documents. This typically takes 1-2 business days."
+                              : "Your verification process has been started but not yet completed."}
+                          </p>
+                          <div className="space-y-2">
+                            {submittedAt ? (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle2 className="h-4 w-4 text-yellow-500" />
+                                  <span className="text-sm text-yellow-600">
+                                    Documents submitted successfully
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-yellow-500" />
+                                  <span className="text-sm text-yellow-600">
+                                    Verification in review
+                                  </span>
+                                </div>
+                                <div className="mt-4 text-xs text-yellow-600">
+                                  Submitted on:{" "}
+                                  {new Date(submittedAt).toLocaleDateString()}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-yellow-500" />
+                                <span className="text-sm text-yellow-600">
+                                  Verification process initiated
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {!submittedAt && (
+                            <Button
+                              onClick={() =>
+                                navigate(
+                                  user?.role === "investor"
+                                    ? "/investor-verification"
+                                    : user?.role === "startup"
+                                    ? "/startup-verification"
+                                    : "/verification"
+                                )
+                              }
+                              className="bg-brand-primary hover:bg-brand-primary-dark text-white mt-4"
+                            >
+                              Complete Verification
+                              <ArrowRight className="ml-1.5 h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      // Rejected state
+                      <div className="flex items-start gap-4">
+                        <div className="rounded-full bg-red-100 p-2 mt-1">
+                          <XCircle className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-red-700 mb-1">
+                            Verification Rejected
+                          </h4>
+                          <p className="text-sm text-red-600 mb-3">
+                            {rejectionReason}
+                          </p>
                           <Button
                             onClick={() =>
                               navigate(
@@ -530,100 +625,223 @@ export function ProfilePage() {
                                   : "/verification"
                               )
                             }
-                            className="bg-brand-primary hover:bg-brand-primary-dark text-white mt-4"
+                            className="bg-brand-primary hover:bg-brand-primary-dark text-white mt-2"
                           >
-                            Complete Verification
+                            Try Again
                             <ArrowRight className="ml-1.5 h-4 w-4" />
                           </Button>
-                        )}
+                          {reviewedAt && (
+                            <div className="mt-4 text-xs text-red-600">
+                              Reviewed on:{" "}
+                              {new Date(reviewedAt).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    // Rejected state
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-full bg-red-100 p-2 mt-1">
-                        <XCircle className="h-6 w-6 text-red-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-red-700 mb-1">
-                          Verification Rejected
-                        </h4>
-                        <p className="text-sm text-red-600 mb-3">
-                          {rejectionReason}
-                        </p>
-                        <Button
-                          onClick={() =>
-                            navigate(
-                              user?.role === "investor"
-                                ? "/investor-verification"
-                                : user?.role === "startup"
-                                ? "/startup-verification"
-                                : "/verification"
-                            )
-                          }
-                          className="bg-brand-primary hover:bg-brand-primary-dark text-white mt-2"
-                        >
-                          Try Again
-                          <ArrowRight className="ml-1.5 h-4 w-4" />
-                        </Button>
-                        {reviewedAt && (
-                          <div className="mt-4 text-xs text-red-600">
-                            Reviewed on:{" "}
-                            {new Date(reviewedAt).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Security Settings Card */}
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Security
-                </h3>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="font-medium">Password</h4>
-                    <p className="text-sm text-gray-500">Last updated: Never</p>
+                    )}
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/reset-password")}
-                    className="border-gray-200 hover:text-900 hover:border-brand-primary hover:bg-brand-light"
-                  >
-                    Change password
-                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Admin information (only shown for admin users) */}
+            {isAdmin && (
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                    <UserCog className="h-5 w-5 mr-2" />
+                    Admin Information
+                  </h3>
                 </div>
 
-                <div className="border-t border-gray-100 pt-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-medium">Two-factor Authentication</h4>
-                      <p className="text-sm text-gray-500">
-                        Add an extra layer of security to your account
+                <div className="p-6 space-y-4">
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                      <div>
+                        <h4 className="font-medium">Admin Type</h4>
+                        <p className="text-sm text-gray-500">
+                          Your administrative access level
+                        </p>
+                      </div>
+                      <Badge
+                        variant={isSuperAdmin ? "default" : "outline"}
+                        className={cn(
+                          "px-3 py-1",
+                          isSuperAdmin
+                            ? "bg-brand-primary hover:bg-brand-primary"
+                            : "border-brand-primary text-brand-primary"
+                        )}
+                      >
+                        {isSuperAdmin ? "Super Admin" : "Sub-Admin"}
+                      </Badge>
+                    </div>
+
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                      <div>
+                        <h4 className="font-medium">Last Login</h4>
+                        <p className="text-sm text-gray-500">
+                          Your recent login activity
+                        </p>
+                      </div>
+                      <p className="text-sm">
+                        {new Date().toLocaleDateString()} at{" "}
+                        {new Date().toLocaleTimeString()}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      disabled
-                      className="border-gray-200"
-                    >
-                      Coming soon
-                    </Button>
+
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">Admin Dashboard</h4>
+                        <p className="text-sm text-gray-500">
+                          Access the admin control panel
+                        </p>
+                      </div>
+                      <Button
+                        variant="default"
+                        onClick={() => navigate("/admin")}
+                        className="bg-brand-primary hover:bg-brand-primary-dark"
+                      >
+                        Go to Dashboard
+                      </Button>
+                    </div>
+
+                    {isSuperAdmin && (
+                      <div className="pt-3 border-t border-gray-100">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-medium">Manage Sub-Admins</h4>
+                            <p className="text-sm text-gray-500">
+                              Create and manage sub-admin accounts
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate("/admin/sub-admins")}
+                            className="border-brand-primary text-brand-primary hover:bg-brand-light"
+                          >
+                            Manage
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Admin permissions (only shown for super admins) */}
+            {isSuperAdmin && (
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                    <Lock className="h-5 w-5 mr-2" />
+                    Admin Permissions
+                  </h3>
+                </div>
+
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <div className="flex items-center">
+                        <div className="rounded-full bg-green-100 p-2">
+                          <Users className="h-5 w-5 text-green-600" />
+                        </div>
+                        <h4 className="font-medium ml-3">User Management</h4>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Full access to manage all user accounts
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <div className="flex items-center">
+                        <div className="rounded-full bg-blue-100 p-2">
+                          <ShieldCheck className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <h4 className="font-medium ml-3">
+                          Verification Control
+                        </h4>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Approve or reject user verification documents
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <div className="flex items-center">
+                        <div className="rounded-full bg-purple-100 p-2">
+                          <Settings className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <h4 className="font-medium ml-3">System Settings</h4>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Configure application settings and parameters
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <div className="flex items-center">
+                        <div className="rounded-full bg-amber-100 p-2">
+                          <FileText className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <h4 className="font-medium ml-3">Content Management</h4>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Edit website content and manage media
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Regular admin permissions (only for non-super admins) */}
+            {isAdmin && !isSuperAdmin && (
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                    <Lock className="h-5 w-5 mr-2" />
+                    Your Admin Permissions
+                  </h3>
+                </div>
+
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <div className="flex items-center">
+                        <div className="rounded-full bg-green-100 p-2">
+                          <Users className="h-5 w-5 text-green-600" />
+                        </div>
+                        <h4 className="font-medium ml-3">User Management</h4>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        View user accounts and basic information
+                      </p>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <div className="flex items-center">
+                        <div className="rounded-full bg-blue-100 p-2">
+                          <ShieldCheck className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <h4 className="font-medium ml-3">
+                          Verification Processing
+                        </h4>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Process user verification documents
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+         
             </div>
           </div>
-        </div>
       </div>
+</AdminPageWrapper>
     </DashboardNavigation>
   );
 }

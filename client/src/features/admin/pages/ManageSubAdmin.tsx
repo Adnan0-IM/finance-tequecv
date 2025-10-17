@@ -460,7 +460,8 @@ const ManageSubAdmin = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="font-bold">Role:</div>
                     <div className="col-span-2">
-                      <Badge variant="default">Administrator</Badge>
+                      
+                      <Badge variant="default">{selectedAdmin.isSuper ? "Super Administrator" : "Administrator"}</Badge>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
