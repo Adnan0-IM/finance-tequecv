@@ -34,13 +34,13 @@ async function ensureAdminUser() {
   console.log("[Admin seed] Admin user created:", email);
 }
 
-async function seedFakeUsers(countPerRole = 5) {
+async function seedFakeUsers(countPerRole = 20) {
   if (process.env.NODE_ENV === "production") {
     console.warn("[Seed] Skipping fake users seeding in production.");
     return;
   }
 
-  const roles = ["investor", "startup", "admin"];
+  const roles = ["admin", "startup", "investor"];
   const basePassword = process.env.SEED_TEST_PASSWORD || "Test1234!";
 
   const created = [];
@@ -67,7 +67,7 @@ async function seedFakeUsers(countPerRole = 5) {
         role,
         isVerified: true,
         emailVerified: true,
-        verification: role === "admin" ? undefined : { status: "approved" },
+        verification: role === "admin" ? undefined : { status: "approved" , submittedAt: new Date()},
       });
 
       created.push(email);

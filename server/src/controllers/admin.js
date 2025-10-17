@@ -28,6 +28,8 @@ function mapUserForAdmin(req, u) {
 
 exports.getUsers = async (req, res) => {
   try {
+    console.log("Raw query params:", req.query);
+
     const page = Math.max(parseInt(req.query.page || "1", 10), 1);
     const limit = Math.min(
       Math.max(parseInt(req.query.limit || "20", 10), 1),
@@ -35,9 +37,33 @@ exports.getUsers = async (req, res) => {
     );
     const status = (req.query.status || "").trim();
     const q = (req.query.q || "").trim();
+    const role = (req.query.role || "").trim();
+    const onlySubmitted = req.query.onlySubmitted === "true";
 
     const filter = {};
+    // Filter by verification status
     if (status) filter["verification.status"] = status;
+
+    // Filter by role (if specified)
+    if (role) {
+      filter.role = role;
+      console.log(`Filtering by specific role: ${role}`);
+    }
+    // Filter to exclude admin users if specified
+    else if (req.query.excludeAdmin === "true") {
+      filter.role = { $ne: "admin" };
+      console.log("Excluding admin users");
+    }
+
+    // Filter only users who have submitted verification documents
+    if (onlySubmitted) {
+      filter["verification.submittedAt"] = { $exists: true };
+      console.log("Filtering only users who have submitted verification");
+    }
+
+    console.log("Final filter:", JSON.stringify(filter, null, 2));
+
+    // Search filter
     if (q) {
       const rx = new RegExp(q, "i");
       filter.$or = [
