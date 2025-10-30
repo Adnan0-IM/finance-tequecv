@@ -23,7 +23,7 @@ router.use(protect, authorize("admin"));
  *     tags:
  *       - Admin
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: status
@@ -178,7 +178,7 @@ router.get("/users", getUsers);
  *     tags:
  *       - Admin
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -198,90 +198,90 @@ router.get("/users", getUsers);
  *                   type: boolean
  *                   example: true
  *                 data:
- *                     type: object
- *                     properties:
- *                       name:
- *                         type: string
- *                       email:
- *                         type: string
- *                       phone:
- *                         type: string
- *                       role:
- *                         type: string
- *                         enum: [investor, startup, admin]
- *                       isVerified:
- *                         type: boolean
- *                       verification:
- *                         type: object
- *                         properties:
- *                           personal:
- *                             type: object
- *                             properties:
- *                               firstName:
- *                                 type: string
- *                               surname:
- *                                 type: string
- *                               dateOfBirth:
- *                                 type: string
- *                               localGovernment:
- *                                 type: string
- *                               stateOfResidence:
- *                                 type: string
- *                               residentialAddress:
- *                                 type: string
- *                               ninNumber:
- *                                 type: string
- *                           nextOfKin:
- *                             type: object
- *                             properties:
- *                               fullName:
- *                                 type: string
- *                               phoneNumber:
- *                                 type: string
- *                               email:
- *                                 type: string
- *                               residentialAddress:
- *                                 type: string
- *                               relationship:
- *                                 type: string
- *                           bankDetails:
- *                             type: object
- *                             properties:
- *                               accountName:
- *                                 type: string
- *                               accountNumber:
- *                                 type: string
- *                               bankName:
- *                                 type: string
- *                               bvnNumber:
- *                                 type: string
- *                               accountType:
- *                                 type: string
- *                           documents:
- *                             type: object
- *                             properties:
- *                               idDocument:
- *                                 type: string
- *                               idDocumentUrl:
- *                                 type: string
- *                               passportPhoto:
- *                                 type: string
- *                               passportPhotoUrl:
- *                                 type: string
- *                               utilityBill:
- *                                 type: string
- *                               utilityBillUrl:
- *                                 type: string
- *                           status:
- *                             type: string
- *                             enum: [pending, approved, rejected]
- *                           rejectionReason:
- *                             type: string
- *                           reviewedAt:
- *                             type: string
- *                             format: date-time
- *                           reviewedBy:
- *                             type: string
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                       enum: [investor, startup, admin]
+ *                     isVerified:
+ *                       type: boolean
+ *                     verification:
+ *                       type: object
+ *                       properties:
+ *                         personal:
+ *                           type: object
+ *                           properties:
+ *                             firstName:
+ *                               type: string
+ *                             surname:
+ *                               type: string
+ *                             dateOfBirth:
+ *                               type: string
+ *                             localGovernment:
+ *                               type: string
+ *                             stateOfResidence:
+ *                               type: string
+ *                             residentialAddress:
+ *                               type: string
+ *                             ninNumber:
+ *                               type: string
+ *                         nextOfKin:
+ *                           type: object
+ *                           properties:
+ *                             fullName:
+ *                               type: string
+ *                             phoneNumber:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             residentialAddress:
+ *                               type: string
+ *                             relationship:
+ *                               type: string
+ *                         bankDetails:
+ *                           type: object
+ *                           properties:
+ *                             accountName:
+ *                               type: string
+ *                             accountNumber:
+ *                               type: string
+ *                             bankName:
+ *                               type: string
+ *                             bvnNumber:
+ *                               type: string
+ *                             accountType:
+ *                               type: string
+ *                         documents:
+ *                           type: object
+ *                           properties:
+ *                             idDocument:
+ *                               type: string
+ *                             idDocumentUrl:
+ *                               type: string
+ *                             passportPhoto:
+ *                               type: string
+ *                             passportPhotoUrl:
+ *                               type: string
+ *                             utilityBill:
+ *                               type: string
+ *                             utilityBillUrl:
+ *                               type: string
+ *                         status:
+ *                           type: string
+ *                           enum: [pending, approved, rejected]
+ *                         rejectionReason:
+ *                           type: string
+ *                         reviewedAt:
+ *                           type: string
+ *                           format: date-time
+ *                         reviewedBy:
+ *                           type: string
  *                       createdAt:
  *                         type: string
  *                         format: date-time
@@ -305,7 +305,7 @@ router.get("/users/:id", getUser);
  *     tags:
  *       - Admin
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -445,7 +445,7 @@ router.patch("/users/:id/verification-status", verifyUser);
  *     tags:
  *       - Admin
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -507,7 +507,7 @@ router.get("/users/:id/verification-status", userVerificationStatus);
  *     tags:
  *       - Admin
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -577,7 +577,7 @@ router.patch("/users/:id/role", updateUserRole);
  *     tags:
  *       - Admin
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -607,7 +607,44 @@ router.patch("/users/:id/role", updateUserRole);
 // DELETE /api/admin/users/:id
 router.delete("/users/:id", deleteUser);
 
-// POST /api/admin/create-sub-admin
+/**
+ * @openapi
+ * /api/admin/create-sub-admin:
+ *   post:
+ *     summary: Create a sub-admin user (admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, email, password]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Must end with @financetequecv.com
+ *               phone:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       201:
+ *         description: Sub-admin created
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized
+ */
 router.post("/create-sub-admin", createSubAdmin);
 
 
