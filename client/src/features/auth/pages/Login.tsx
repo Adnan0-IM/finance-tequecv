@@ -44,9 +44,9 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Assume login returns the authenticated user; if not, adjust your auth to do so.
+      const email = data.email.trim().toLocaleLowerCase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const u: any = await login(data.email, data.password);
+      const u: any = await login(email, data.password);
 
       toast.success("Logged in successfully!");
 
@@ -58,9 +58,7 @@ export function LoginPage() {
         | "rejected"
         | undefined;
       const submitted = Boolean(u?.verification?.submittedAt);
-      const from = (location.state)?.from?.pathname as
-        | string
-        | undefined;
+      const from = location.state?.from?.pathname as string | undefined;
 
       // Admin first
       if (role === "admin" || data.email.includes("financetequecv.com")) {

@@ -75,8 +75,9 @@ export function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
+    const email = data.email.trim().toLocaleLowerCase()
     try {
-      await register(data.email, data.password, data.name, data.phone);
+      await register(email, data.password, data.name, data.phone);
 
       toast.success("Account created successfully!");
 
