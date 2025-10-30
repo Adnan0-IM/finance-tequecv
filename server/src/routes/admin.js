@@ -7,13 +7,15 @@ const {
   deleteUser,
   verifyUser,
   userVerificationStatus,
-  createSubAdmin
+  createSubAdmin,
 } = require("../controllers/admin");
+const apiKey = require("../middleware/apiKey");
 
 const router = express.Router();
 
 // All routes below require admin
 router.use(protect, authorize("admin"));
+router.use(apiKey);
 
 /**
  * @openapi
@@ -24,6 +26,7 @@ router.use(protect, authorize("admin"));
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *         ApiKeyAuth: []
  *     parameters:
  *       - in: query
  *         name: status
@@ -179,6 +182,7 @@ router.get("/users", getUsers);
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *         ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -306,6 +310,7 @@ router.get("/users/:id", getUser);
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *         ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -446,6 +451,7 @@ router.patch("/users/:id/verification-status", verifyUser);
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *         ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -508,6 +514,7 @@ router.get("/users/:id/verification-status", userVerificationStatus);
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *         ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -578,6 +585,7 @@ router.patch("/users/:id/role", updateUserRole);
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *         ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -616,6 +624,7 @@ router.delete("/users/:id", deleteUser);
  *       - Admin
  *     security:
  *       - bearerAuth: []
+ *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -646,6 +655,5 @@ router.delete("/users/:id", deleteUser);
  *         description: Not authorized
  */
 router.post("/create-sub-admin", createSubAdmin);
-
 
 module.exports = router;

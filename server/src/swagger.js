@@ -134,11 +134,18 @@ const definition = {
         description:
           "Paste the access token from login. Do not include the word 'Bearer'.",
       },
+      ApiKeyAuth: {
+        type: "apiKey",
+        in: "header",
+        name: "x-api-key",
+        description: "Static API key for trusted systems",
+      },
     },
     schemas, // populated from mongoose-to-swagger with enhancements
   },
-  // Make Bearer auth required by default (you can override per operation)
-  security: [{ bearerAuth: [] }],
+  // Default security: Bearer only. Admin routes override to require API key as well.
+
+  security: [{ bearerAuth: [], ApiKeyAuth: [] }],
 };
 
 module.exports = swaggerJsdoc({
