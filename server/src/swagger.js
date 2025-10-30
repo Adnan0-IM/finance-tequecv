@@ -80,7 +80,7 @@ try {
       success: { type: "boolean", example: true },
       token: { type: "string", description: "JWT authentication token" },
       user: { $ref: "#/components/schemas/User" },
-    }
+    },
   };
 
   // Add registration response schema
@@ -110,8 +110,8 @@ const definition = {
     },
   },
   servers: [
-    { url: "http://localhost:3000", description: "Development server" },
     { url: "https://financetequecv.com", description: "Production server" },
+    { url: "http://localhost:3000", description: "Development server" },
   ],
   tags: [
     {
@@ -126,15 +126,19 @@ const definition = {
   ],
   components: {
     securitySchemes: {
-      cookieAuth: {
-        type: "apiKey",
-        in: "cookie",
-        name: "token",
-        description: "Authentication cookie containing JWT token",
+      // Add Bearer scheme for Authorization header
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description:
+          "Paste the access token from login. Do not include the word 'Bearer'.",
       },
     },
     schemas, // populated from mongoose-to-swagger with enhancements
   },
+  // Make Bearer auth required by default (you can override per operation)
+  security: [{ bearerAuth: [] }],
 };
 
 module.exports = swaggerJsdoc({
