@@ -44,7 +44,7 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const email = data.email.trim().toLocaleLowerCase();
+      const email = data.email.toLowerCase().trim();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const u: any = await login(email, data.password);
 

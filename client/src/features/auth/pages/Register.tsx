@@ -75,7 +75,7 @@ export function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
-    const email = data.email.trim().toLocaleLowerCase()
+    const email = data.email.toLowerCase().trim()
     try {
       await register(email, data.password, data.name, data.phone);
 
