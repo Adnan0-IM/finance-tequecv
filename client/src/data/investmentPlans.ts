@@ -21,7 +21,7 @@ export const investmentPlans: InvestmentPlan[] = [
     title: "Venture Capital Investment",
     icon: TrendingUp,
     description:
-      "Venture capital provides funding to startups and innovative businesses with high growth potential, often in exchange for equity. Through a Venture Capital Manager, investors can participate in these opportunities across sectors such as technology, agriculture, health care, and SMEs. This allows investors to benefit from the long-term growth of portfolio companies while also receiving periodic returns through structured investment models, supported by professional management and networks that enhance success.",
+      "Venture capital provides funding to startups and innovative businesses with high growth potential, often in exchange for equity.. Through a Venture Capital Manager, investors can participate in these opportunities across sectors such as technology, agriculture, health care, and SMEs. This allows investors to benefit from the long-term growth of portfolio companies while also receiving periodic returns through structured investment models, supported by professional management and networks that enhance success.",
     longDescription:
       "Venture capital provides funding to startups and innovative businesses with high growth potential, often in exchange for equity. Through a Venture Capital Manager, investors can participate in these opportunities across sectors such as technology, agriculture, health care, and SMEs. This allows investors to benefit from the long-term growth of portfolio companies while also receiving periodic returns through structured investment models, supported by professional management and networks that enhance success.",
     expectedReturn: "12-18% annually",
