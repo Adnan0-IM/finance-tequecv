@@ -39,7 +39,38 @@ const upload = multer({
   },
 });
 
-// POST /api/uploads/carousel  (form-data: file=<image>)
+/**
+ * @openapi
+ * /api/uploads/carousel:
+ *   post:
+ *     summary: Upload a carousel image
+ *     tags: [Uploads]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [file]
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file (max 5MB)
+ *     responses:
+ *       201:
+ *         description: Image uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 url: { type: string, example: "/uploads/carousel/image-123.jpg" }
+ *                 absoluteUrl: { type: string, example: "http://localhost:3000/uploads/carousel/image-123.jpg" }
+ *       400:
+ *         description: No file or invalid type
+ */
 router.post("/carousel", upload.single("file"), (req, res) => {
   if (!req.file) {
     return res
