@@ -16,10 +16,9 @@ const router = express.Router();
  * /api/verification:
  *   post:
  *     summary: Submit verification information
- *     tags:
- *       - Verification
+ *     tags: [Verification]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -27,59 +26,30 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - address
+ *               - residentialAddress
  *             properties:
- *               firstName:
- *                 type: string
- *               surname:
- *                 type: string
- *               phoneNumber:
- *                 type: string
- *               dateOfBirth:
- *                 type: string
- *                 format: date
- *               localGovernment:
- *                 type: string
- *               stateOfResidence:
- *                 type: string
- *               residentialAddress:
- *                 type: string
- *               ninNumber:
- *                 type: string
- *               kinFullName:
- *                 type: string
- *               kinPhoneNumber:
- *                 type: string
- *               kinEmail:
- *                 type: string
- *               kinResidentialAddress:
- *                 type: string
- *               kinRelationship:
- *                 type: string
- *               accountName:
- *                 type: string
- *               accountNumber:
- *                 type: string
- *               bankName:
- *                 type: string
- *               bvnNumber:
- *                 type: string
- *               accountType:
- *                 type: string
+ *               firstName: { type: string }
+ *               surname: { type: string }
+ *               phoneNumber: { type: string }
+ *               ageBracket: { type: string }
+ *               dateOfBirth: { type: string, format: date }
+ *               localGovernment: { type: string }
+ *               stateOfResidence: { type: string }
+ *               residentialAddress: { type: string }
+ *               ninNumber: { type: string }
+ *               kinFullName: { type: string }
+ *               kinPhoneNumber: { type: string }
+ *               kinEmail: { type: string, format: email }
+ *               kinResidentialAddress: { type: string }
+ *               kinRelationship: { type: string }
+ *               accountName: { type: string }
+ *               accountNumber: { type: string }
+ *               bankName: { type: string }
+ *               bvnNumber: { type: string }
+ *               accountType: { type: string }
  *     responses:
  *       200:
  *         description: Verification information submitted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Verification information submitted successfully
  *       400:
  *         description: Invalid input
  *       401:
@@ -92,16 +62,19 @@ router.post("/", protect, submitVerification);
  * /api/verification/documents:
  *   post:
  *     summary: Upload verification documents
- *     tags:
- *       - Verification
+ *     tags: [Verification]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - identificationDocument
+ *               - passportPhoto
+ *               - utilityBill
  *             properties:
  *               identificationDocument:
  *                 type: string
@@ -118,17 +91,6 @@ router.post("/", protect, submitVerification);
  *     responses:
  *       200:
  *         description: Documents uploaded successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Documents uploaded successfully
  *       400:
  *         description: Invalid file type or upload error
  *       401:
@@ -161,47 +123,113 @@ router.post(
  * /api/verification/status:
  *   get:
  *     summary: Get user's verification status
- *     tags:
- *       - Verification
+ *     tags: [Verification]
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Verification status retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   properties:
- *                     status:
- *                       type: string
- *                       enum: [none, pending, approved, rejected]
- *                     isVerified:
- *                       type: boolean
- *                     rejectionReason:
- *                       type: string
- *                       description: Reason for rejection if status is rejected
- *                     verifiedAt:
- *                       type: string
- *                       description: Timestamp when the user was verified
- *                     reviewedAt:
- *                       type: string
- *                       description: Timestamp when the verification was reviewed
  *       401:
  *         description: Not authenticated
  */
 router.get("/status", protect, getVerificationStatus);
 
-// Corporate (text)
+/**
+ * @openapi
+ * /api/verification/corporate:
+ *   post:
+ *     summary: Submit corporate verification (text fields)
+ *     tags: [Verification]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [company, bankDetails, signatories]
+ *             properties:
+ *               company:
+ *                 type: object
+ *                 description: Company details
+ *               bankDetails:
+ *                 type: object
+ *                 description: Company bank details
+ *               signatories:
+ *                 type: array
+ *                 description: At least one signatory is required
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name: { type: string }
+ *                     email: { type: string, format: email }
+ *                     phone: { type: string }
+ *               referral:
+ *                 type: object
+ *                 description: Optional referral info
+ *     responses:
+ *       201:
+ *         description: Corporate verification saved
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ */
 router.post("/corporate", protect, submitCorporateVerification);
 
-// Corporate (documents) with higher file cap and dynamic field names
+/**
+ * @openapi
+ * /api/verification/corporate/documents:
+ *   post:
+ *     summary: Upload corporate verification documents
+ *     tags: [Verification]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               companyLogo:
+ *                 type: string
+ *                 format: binary
+ *               certificateOfIncorporation:
+ *                 type: string
+ *                 format: binary
+ *               memorandumAndArticles:
+ *                 type: string
+ *                 format: binary
+ *               utilityBill:
+ *                 type: string
+ *                 format: binary
+ *               tinCertificate:
+ *                 type: string
+ *                 format: binary
+ *               signatories[0][idDocument]:
+ *                 type: string
+ *                 format: binary
+ *                 description: ID document for signatory index 0
+ *               signatories[0][signature]:
+ *                 type: string
+ *                 format: binary
+ *                 description: Signature image for signatory index 0
+ *               signatories[1][idDocument]:
+ *                 type: string
+ *                 format: binary
+ *               signatories[1][signature]:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Corporate documents uploaded successfully
+ *       400:
+ *         description: Invalid upload
+ *       401:
+ *         description: Not authenticated
+ */
 router.post(
   "/corporate/documents",
   protect,
