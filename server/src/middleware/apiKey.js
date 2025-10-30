@@ -5,9 +5,9 @@ const allowedKeys = new Set(
     .filter(Boolean)
 );
 
-const TRUSTED_ORIGINS = ["localhost:3000", "http:localhost:3000", "https:financetequecv.com"];
+const TRUSTED_ORIGINS = ["localhost:3000", "http://localhost:3000", "https://financetequecv.com"];
 const apiKey = (req, res, next) => {
-  const origin = req.headers.origin || req.headers.host;
+  const origin = req.headers.origin || req.headers.host || req.headers.referer.startsWith("https://financetequecv.com") || "https://financetequecv.com";
   if (TRUSTED_ORIGINS.includes(origin)) {
     return next();
   }
