@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect, authorize } = require("../middleware/auth");
+const { apiKeyOrBearerAdmin } = require("../middleware/apiKey");
 const {
   getUsers,
   getUser,
@@ -9,167 +9,25 @@ const {
   userVerificationStatus,
   createSubAdmin,
 } = require("../controllers/admin");
-const apiKey = require("../middleware/apiKey");
 
 const router = express.Router();
 
-// All routes below require admin
-router.use(protect, authorize("admin"));
-router.use(apiKey);
+// Either trusted system (API key) OR admin JWT
+router.use(apiKeyOrBearerAdmin);
 
 /**
  * @openapi
  * /api/admin/users:
  *   get:
- *     summary: Get all users with filtering, pagination and search
- *     tags:
- *       - Admin
+ *     tags: [Admin]
+ *     summary: Get all users (admin or API key)
  *     security:
  *       - bearerAuth: []
- *         ApiKeyAuth: []
- *     parameters:
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [pending, approved, rejected]
- *         description: Filter by verification status
- *       - in: query
- *         name: q
- *         schema:
- *           type: string
- *         description: Search term for email, name, phone or verification info
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *           maximum: 100
- *         description: Items per page
+ *       - ApiKeyAuth: []
  *     responses:
- *       200:
- *         description: List of users with pagination
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       name:
- *                         type: string
- *                       email:
- *                         type: string
- *                       phone:
- *                         type: string
- *                       role:
- *                         type: string
- *                         enum: [investor, startup, admin]
- *                       isVerified:
- *                         type: boolean
- *                       verification:
- *                         type: object
- *                         properties:
- *                           personal:
- *                             type: object
- *                             properties:
- *                               firstName:
- *                                 type: string
- *                               surname:
- *                                 type: string
- *                               dateOfBirth:
- *                                 type: string
- *                               localGovernment:
- *                                 type: string
- *                               stateOfResidence:
- *                                 type: string
- *                               residentialAddress:
- *                                 type: string
- *                               ninNumber:
- *                                 type: string
- *                           nextOfKin:
- *                             type: object
- *                             properties:
- *                               fullName:
- *                                 type: string
- *                               phoneNumber:
- *                                 type: string
- *                               email:
- *                                 type: string
- *                               residentialAddress:
- *                                 type: string
- *                               relationship:
- *                                 type: string
- *                           bankDetails:
- *                             type: object
- *                             properties:
- *                               accountName:
- *                                 type: string
- *                               accountNumber:
- *                                 type: string
- *                               bankName:
- *                                 type: string
- *                               bvnNumber:
- *                                 type: string
- *                               accountType:
- *                                 type: string
- *                           documents:
- *                             type: object
- *                             properties:
- *                               idDocument:
- *                                 type: string
- *                               idDocumentUrl:
- *                                 type: string
- *                               passportPhoto:
- *                                 type: string
- *                               passportPhotoUrl:
- *                                 type: string
- *                               utilityBill:
- *                                 type: string
- *                               utilityBillUrl:
- *                                 type: string
- *                           status:
- *                             type: string
- *                             enum: [pending, approved, rejected]
- *                           rejectionReason:
- *                             type: string
- *                           reviewedAt:
- *                             type: string
- *                             format: date-time
- *                           reviewedBy:
- *                             type: string
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                       _id:
- *                         type: string
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                     limit:
- *                       type: integer
- *                     total:
- *                       type: integer
- *                     pages:
- *                       type: integer
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized
+ *       200: { description: OK }
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden }
  */
 router.get("/users", getUsers);
 
