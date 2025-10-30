@@ -178,7 +178,7 @@ router.post("/resend-code", auth.resendVerificationCode);
  *                   example: true
  *                 token:
  *                   type: string
- *                   description: JWT token (also set as HTTP-only cookie)
+ *                   description: JWT access token
  *                 user:
  *                   $ref: "#/components/schemas/User"
  *       401:
@@ -194,7 +194,7 @@ router.post("/login", auth.login);
  *     tags:
  *       - Auth
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User profile retrieved successfully
@@ -221,7 +221,7 @@ router.get("/me", protect, auth.getMe);
  *     tags:
  *       - Auth
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -255,7 +255,7 @@ router.get("/me", protect, auth.getMe);
  *                       type: string
  *                     role:
  *                        type: string
- *                        enum: ["startup", "investor"]
+ *                        enum: ["startup", "investor", "admin"]
  *                     isVerified:
  *                       type: boolean
  *                     phone:
@@ -273,7 +273,7 @@ router.put("/updateMe", protect, auth.updateMe);
  *     tags:
  *       - Auth
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -320,7 +320,39 @@ router.put("/updateMe", protect, auth.updateMe);
  */
 router.put("/setRole", protect, auth.setRole);
 
-router.put("/setInvestorType", protect, auth.setInvestorType)
+/**
+ * @openapi
+ * /api/auth/setInvestorType:
+ *   put:
+ *     summary: Set investor sub-type for the current user
+ *     description: Sets additional investor metadata (e.g., individual or corporate).
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               investorType:
+ *                 type: string
+ *                 description: Investor classification
+ *                 example: individual
+ *               details:
+ *                 type: object
+ *                 description: Optional extra fields for the investor type
+ *     responses:
+ *       200:
+ *         description: Investor type updated successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Not authenticated
+ */
+router.put("/setInvestorType", protect, auth.setInvestorType);
 
 /**
  * @openapi
@@ -330,7 +362,7 @@ router.put("/setInvestorType", protect, auth.setInvestorType)
  *     tags:
  *       - Auth
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Account deleted successfully
@@ -347,7 +379,7 @@ router.delete("/deleteMe", protect, auth.deleteMe);
  *     tags:
  *       - Auth
  *     security:
- *       - cookieAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Logged out successfully
@@ -417,11 +449,17 @@ router.post("/reset-password", auth.resetPassword);
  * @openapi
  * /api/auth/refresh:
  *   post:
- *     summary: Refresh JWT token
+ *     summary: Refresh JWT access token
+ *     description: Requires a valid refresh token cookie named "refreshToken".
  *     tags:
  *       - Auth
- *     security:
- *       - cookieAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: refreshToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Refresh token cookie issued at login
  *     responses:
  *       200:
  *         description: Token refreshed successfully
@@ -435,11 +473,11 @@ router.post("/reset-password", auth.resetPassword);
  *                   example: true
  *                 token:
  *                   type: string
- *                   description: New JWT token
+ *                   description: New JWT access token
  *                 user:
  *                   $ref: "#/components/schemas/User"
  *       401:
- *         description: Not authenticated
+ *         description: Not authenticated or invalid refresh token
  */
 router.post("/refresh", auth.refresh);
 
