@@ -11,7 +11,6 @@ const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 const swaggerSpec = require("./swagger");
 const { connectDB } = require("./config/db");
-const crypto = require("crypto");
 const subscribeRoute = require("./services/newsletterSubscribe");
 
 // Load env vars
