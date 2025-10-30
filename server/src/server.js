@@ -51,6 +51,11 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Skip-Auth-Retry"],
   })
 );
+// Expose raw OpenAPI JSON for Postman import
+app.get("/api-docs.json", (_req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
 
 // Mount routes
 app.use("/api/auth", authRoutes);
