@@ -73,7 +73,7 @@ export function DashboardPage() {
           totalValue: "₦1,250,000",
           invested: "₦1,000,000",
           totalGain: "₦250,000",
-          gainPercentage: "+25%",
+          gainPercentage: "+18%",
           isPositive: true,
         };
         const transactionsData: Transaction[] = [
