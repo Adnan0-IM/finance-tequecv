@@ -1,12 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { NavLink, useNavigate,  } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useSwipeable } from "react-swipeable";
 import {
   User,
   Home,
   BarChart3,
-  FileText,
   Settings,
   Menu,
   X,
@@ -84,16 +83,23 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
     { title: "Dashboard", path: "/dashboard", icon: Home },
     { title: "Investments", path: "/dashboard/investments", icon: BarChart3 },
     { title: "Transactions", path: "/dashboard/transactions", icon: Wallet },
-    { title: "Documents", path: "/dashboard/documents", icon: FileText },
     { title: "Settings", path: "/dashboard/settings", icon: Settings },
   ];
 
   const navLinksFundRaiser = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
     { title: "Applications", path: "/dashboard/applications", icon: BarChart3 },
-    { title: "Documents", path: "/dashboard/documents", icon: FileText },
     { title: "Settings", path: "/dashboard/settings", icon: Settings },
   ];
+
+  // Prefer path-based disabling (more robust than title comparisons)
+  const DISABLED_PATHS = new Set<string>([
+    "/dashboard/investments",
+    "/dashboard/transactions",
+    "/dashboard/settings",
+    "/dashboard/applications",
+  ]);
+  const isDisabledPath = (path: string) => DISABLED_PATHS.has(path);
 
   let navLinks = navLinksAdmin; // Default to admin links
   if (user?.role === "admin" && !user?.isSuper) {
@@ -151,17 +157,32 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
           <nav className="flex-1 px-2 py-4 space-y-1">
             {navLinks.map((item) => {
               const Icon = item.icon;
+              const disabled = isDisabledPath(item.path);
               return (
                 <NavLink
                   key={item.title}
                   to={item.path}
-                  className={() =>
-                    `group flex items-center px-3 py-3 text-base font-medium rounded-md ${
-                      location.pathname === item.path
+                  onClick={(e) => {
+                    if (disabled) {
+                      e.preventDefault();
+                      toast.info("This feature is coming soon.");
+                    }
+                  }}
+                  className={({ isActive }) =>
+                    `group flex items-center px-3 py-3 text-base font-medium rounded-md transition-colors
+                    ${
+                      disabled
+                        ? "opacity-50 cursor-not-allowed pointer-events-auto"
+                        : ""
+                    }
+                    ${
+                      isActive
                         ? "bg-primary text-white"
                         : "text-gray-700 hover:bg-brand-light"
                     }`
                   }
+                  aria-disabled={disabled}
+                  tabIndex={disabled ? -1 : 0}
                 >
                   <Icon
                     className={`mr-3 size-5 ${
@@ -199,7 +220,6 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
               onClick={(e) => e.stopPropagation()}
               className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-white shadow-xl  overflow-hidden"
             >
-             
               {/* Header with Logo */}
               <div className="h-20 px-4 flex items-center justify-between border-b border-gray-100">
                 <div className="flex gap-2 items-center">
@@ -249,8 +269,6 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                     </span>
                   </div>
                 </div>
-
-              
               </div>
 
               {/* Navigation Menu */}
@@ -261,35 +279,47 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                 {navLinks.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
+                  const disabled = isDisabledPath(item.path);
                   return (
                     <NavLink
                       key={item.title}
                       to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        if (disabled) {
+                          e.preventDefault();
+                          toast.info("This feature is coming soon.");
+                          return;
+                        }
+                        setIsMobileMenuOpen(false);
+                      }}
                       className={() =>
-                        `group flex items-center px-3 py-2.5 text-lg font-medium rounded-md transition-all ${
+                        `group flex items-center px-3 py-2.5 text-lg font-medium rounded-md transition-all
+                        ${
+                          disabled
+                            ? "opacity-50 cursor-not-allowed pointer-events-auto"
+                            : ""
+                        }
+                        ${
                           isActive
                             ? "bg-primary text-white shadow-md"
                             : "text-gray-700 hover:bg-gray-50"
                         }`
                       }
+                      aria-disabled={disabled}
+                      tabIndex={disabled ? -1 : 0}
                     >
-                      <div
-                        className={`mr-3 p-1.5  rounded-md
-                       bg-primary/5
-                        `}
-                      >
+                      <div className="mr-3 p-1.5 rounded-md bg-primary/5">
                         <Icon
                           className={`h-5 w-5 ${
-                            isActive
+                            disabled
+                              ? "text-gray-400"
+                              : isActive
                               ? "text-white"
                               : "text-primary group-hover:text-primary/80"
                           }`}
                         />
                       </div>
                       {item.title}
-
-                     
                     </NavLink>
                   );
                 })}
@@ -340,7 +370,6 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
 
             {/* Mobile Menu Button with swipe hint */}
             <div className="md:hidden flex items-center space-x-1">
-            
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100"
@@ -430,8 +459,6 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
               >
                 {children}
               </SwipeableLayout>
-
-        
             </>
           ) : (
             children
