@@ -7,6 +7,7 @@ export const nigerianBanks = [
   "First City Monument Bank",
   "Guaranty Trust Bank",
   "Heritage Bank",
+  "Jaiz Bank",
   "Keystone Bank",
   "Polaris Bank",
   "Stanbic IBTC Bank",
