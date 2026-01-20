@@ -1,6 +1,7 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const sgMail = require("@sendgrid/mail");
+const { sendEmailOtp } = require("./termii");
 
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("SENDGRID_API_KEY not set. Emails will fail.");
@@ -28,11 +29,11 @@ const esc = (s = "") =>
 const bulletproofButton = ({ href, label }) => `
   <!--[if mso]>
   <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${href}" style="height:44px;v-text-anchor:middle;width:260px;" arcsize="8%" fillcolor="${
-  BRAND.primary
-}" strokecolor="${BRAND.primary}">
+    BRAND.primary
+  }" strokecolor="${BRAND.primary}">
     <w:anchorlock/>
     <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${esc(
-      label
+      label,
     )}</center>
   </v:roundrect>
   <![endif]-->
@@ -85,7 +86,6 @@ const baseTemplate = ({ title, bodyHtml }) => `
           </tr>
           <tr>
             <td class="container-pad" style="padding:34px 30px;">
-              ${bodyHtml}
             </td>
           </tr>
           <tr>
@@ -111,7 +111,7 @@ const otpSection = ({ name, otp }) => `
     BRAND.dark
   }; font-size:20px; margin:0 0 15px; text-align:center;">Your Verification Code</h1>
   <p style="color:#333333; font-size:15px; line-height:1.6; margin:0 0 15px;">Hello ${esc(
-    name
+    name,
   )},</p>
   <p style="color:#333333; font-size:15px; line-height:1.6; margin:0 0 15px;">
     Use the verification code below to complete your request:
@@ -130,7 +130,7 @@ const resetSection = ({ name, resetUrl }) => `
     BRAND.dark
   }; font-size:20px; margin:0 0 15px; text-align:center;">Password Reset Request</h1>
   <p style="color:#333333; font-size:15px; line-height:1.6; margin:0 0 15px;">Hello ${esc(
-    name
+    name,
   )},</p>
   <p style="color:#333333; font-size:16px; line-height:1.6; margin:0 0 22px;">
     We received a request to reset your password. Click the button below to set a new password.
@@ -143,7 +143,7 @@ const resetSection = ({ name, resetUrl }) => `
   </p>
   <p style="color:#333333; font-size:14px; line-height:1.6; margin:16px 0 6px;">Or copy and paste this URL:</p>
   <p style="font-size:12px; line-height:1.5; color:#666666; word-break:break-all; margin:0;">${esc(
-    resetUrl
+    resetUrl,
   )}</p>
 `;
 
@@ -152,7 +152,7 @@ const welcomeSection = ({ name }) => `
     BRAND.dark
   }; font-size:20px; margin:0 0 15px; text-align:center;">Welcome to Finance Teque!</h1>
   <p style="color:#333333; font-size:15px; line-height:1.6; margin:0 0 15px;">Hello ${esc(
-    name
+    name,
   )},</p>
   <p style="color:#333333; font-size:14px; line-height:1.6; margin:0 0 15px;">
     We’re excited to have you with us. Explore ethical investment opportunities and track your portfolio with ease.
@@ -178,7 +178,7 @@ const verificationReceivedSection = ({ name }) => `
     BRAND.dark
   }; font-size:20px; margin:0 0 15px; text-align:center;">Verification Submitted</h1>
   <p style="color:#333333; font-size:15px; line-height:1.6; margin:0 0 15px;">Hello ${esc(
-    name
+    name,
   )},</p>
   <p style="color:#333333; font-size:14px; line-height:1.6; margin:0 0 15px;">
     We’ve received your verification details. Our team will review them and notify you once the process is complete.
@@ -244,7 +244,7 @@ async function sendWithRetry(msg) {
       console.warn(
         `SendGrid send failed (${
           err.code || err.message || "error"
-        }); retrying in ${wait}ms… [${attempt}/${RETRY_ATTEMPTS}]`
+        }); retrying in ${wait}ms… [${attempt}/${RETRY_ATTEMPTS}]`,
       );
       await delay(wait);
     }
@@ -253,6 +253,24 @@ async function sendWithRetry(msg) {
 }
 
 async function sendVerificationEmail(to, code) {
+  const provider = (process.env.EMAIL_PROVIDER || "sendgrid").toLowerCase();
+
+  // Use Termii for OTP email
+  if (provider === "termii") {
+    if (process.env.EMAIL_DISABLED === "1") {
+      console.warn("Email sending disabled (EMAIL_DISABLED=1) — skipping.");
+      return;
+    }
+
+    const resp = await sendEmailOtp({ email: to, code });
+
+    // Optional: log message_id for tracking
+    if (resp?.code !== "ok") {
+      throw new Error(`Termii email OTP failed: ${JSON.stringify(resp)}`);
+    }
+    return;
+  }
+
   const name = to.split("@")[0];
   const html = baseTemplate({
     title: "Your Verification Code",
@@ -272,7 +290,7 @@ async function sendVerificationEmail(to, code) {
 async function sendResetPasswordEmail(to, token) {
   const name = to.split("@")[0];
   const resetUrl = `${APP_URL}/reset-password?token=${encodeURIComponent(
-    token
+    token,
   )}`;
   const html = baseTemplate({
     title: "Reset Your Password",
@@ -323,7 +341,7 @@ async function sendVerificationSubmittedEmail(to, name = to.split("@")[0]) {
 
 async function sendAdminVerificationNotification(
   to,
-  { email, name = email.split("@")[0] }
+  { email, name = email.split("@")[0] },
 ) {
   const title = "New verification submission";
   const bodyHtml = `
