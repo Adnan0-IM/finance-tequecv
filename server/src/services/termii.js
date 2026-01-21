@@ -1,7 +1,9 @@
 const axios = require("axios");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const TERMII_BASE_URL = (
-  process.env.TERMII_BASE_URL || "https://api.termii.com"
+  process.env.TERMII_BASE_URL || "https://v3.api.termii.com"
 ).replace(/\/+$/, "");
 const TERMII_API_KEY = process.env.TERMII_API_KEY;
 const TERMII_EMAIL_CONFIGURATION_ID = process.env.TERMII_EMAIL_CONFIGURATION_ID;
