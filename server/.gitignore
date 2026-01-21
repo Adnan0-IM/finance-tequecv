@@ -1,0 +1,4 @@
+.env
+node_modules/
+plan.md
+mail.js.temp

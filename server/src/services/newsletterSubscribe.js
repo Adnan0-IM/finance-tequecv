@@ -1,18 +1,7 @@
 const express = require("express");
-const sgClient = require("@sendgrid/client");
+const NewsletterSubscriber = require("../models/NewsletterSubscriber");
 
 const router = express.Router();
-
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const SENDGRID_LIST_ID =
-  process.env.SENDGRID_LIST_ID || "935f23c1-e8a6-419a-8172-05951d2d1a00";
-
-if (!SENDGRID_API_KEY) {
-  console.warn("[newsletter] SENDGRID_API_KEY is missing");
-}
-sgClient.setApiKey(SENDGRID_API_KEY);
-// Optional but explicit
-sgClient.setDefaultRequest("baseUrl", "https://api.sendgrid.com");
 
 const isValidEmail = (email) =>
   typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -25,51 +14,80 @@ router.post("/subscribe", async (req, res) => {
       .status(400)
       .json({ success: false, error: "Valid email is required" });
   }
-  if (!SENDGRID_API_KEY) {
-    return res
-      .status(500)
-      .json({ success: false, error: "SendGrid not configured" });
-  }
 
   try {
-    const request = {
-      url: "/v3/marketing/contacts",
-      method: "PUT",
-      body: {
-        list_ids: [SENDGRID_LIST_ID],
-        contacts: [{ email: email.trim() }],
-      },
-    };
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const [resp, body] = await sgClient.request(request);
-    // 202 accepted from SendGrid
-    return res
-      .status(200)
-      .json({
+    const existing = await NewsletterSubscriber.findOne({
+      email: normalizedEmail,
+    });
+    if (existing) {
+      if (existing.status !== "subscribed") {
+        existing.status = "subscribed";
+        existing.subscribedAt = new Date();
+        await existing.save();
+      }
+      return res.status(200).json({
         success: true,
-        message: "Subscribed successfully via SendGrid!",
-      });
-  } catch (err) {
-    const sgErr =
-      err?.response?.body?.errors || err?.response?.body || err?.message;
-    console.error("[newsletter] SendGrid error:", sgErr);
-
-    // Bubble up a clearer error for scope problems
-    if (
-      err?.response?.statusCode === 403 ||
-      String(sgErr).toLowerCase().includes("access forbidden")
-    ) {
-      return res.status(403).json({
-        success: false,
-        error:
-          "SendGrid API key lacks Marketing permissions. Enable Marketing Campaigns → Contacts/Lists (RW) and try again.",
+        message: "Already subscribed.",
       });
     }
 
+    await NewsletterSubscriber.create({
+      email: normalizedEmail,
+      subscribedAt: new Date(),
+      status: "subscribed",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Subscribed successfully.",
+    });
+  } catch (err) {
+    console.error("[newsletter] subscribe error:", err?.message || err);
     return res.status(500).json({
       success: false,
       error: "Could not subscribe",
-      detail: err?.response?.body?.errors || undefined,
+    });
+  }
+});
+
+router.post("/unsubscribe", async (req, res) => {
+  const { email } = req.body || {};
+
+  if (!isValidEmail(email)) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Valid email is required" });
+  }
+
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await NewsletterSubscriber.findOne({
+      email: normalizedEmail,
+    });
+
+    if (!existing) {
+      return res.status(200).json({
+        success: true,
+        message: "Not subscribed.",
+      });
+    }
+
+    if (existing.status !== "unsubscribed") {
+      existing.status = "unsubscribed";
+      await existing.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Unsubscribed successfully.",
+    });
+  } catch (err) {
+    console.error("[newsletter] unsubscribe error:", err?.message || err);
+    return res.status(500).json({
+      success: false,
+      error: "Could not unsubscribe",
     });
   }
 });

@@ -8,6 +8,7 @@ const {
   verifyUser,
   userVerificationStatus,
   createSubAdmin,
+  sendNewsletter,
 } = require("../controllers/admin");
 
 const router = express.Router();
@@ -158,6 +159,47 @@ router.get("/users", getUsers);
  */
 // GET /api/admin/users/:id
 router.get("/users/:id", getUser);
+
+/**
+ * @openapi
+ * /api/admin/newsletter/send:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Send newsletter email batch (Termii template)
+ *     security:
+ *       - bearerAuth: []
+ *       - ApiKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [subject, content]
+ *             properties:
+ *               subject:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               templateId:
+ *                 type: string
+ *                 description: Optional override for TERMII_TEMPLATE_NEWSLETTER
+ *               variables:
+ *                 type: object
+ *                 description: Extra Termii template variables
+ *               limit:
+ *                 type: number
+ *                 description: Batch size (default 100, max 500)
+ *               cursor:
+ *                 type: string
+ *                 description: ObjectId cursor from previous response
+ *     responses:
+ *       200: { description: OK }
+ *       400: { description: Bad Request }
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden }
+ */
+router.post("/newsletter/send", sendNewsletter);
 
 /**
  * @openapi

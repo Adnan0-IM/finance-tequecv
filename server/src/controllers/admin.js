@@ -1,4 +1,7 @@
 const User = require("../models/User");
+const mongoose = require("mongoose");
+const NewsletterSubscriber = require("../models/NewsletterSubscriber");
+const { sendTemplateEmail } = require("../services/termii");
 
 function toAbsolute(req, webPath) {
   if (!webPath) return null;
@@ -33,7 +36,7 @@ exports.getUsers = async (req, res) => {
     const page = Math.max(parseInt(req.query.page || "1", 10), 1);
     const limit = Math.min(
       Math.max(parseInt(req.query.limit || "20", 10), 1),
-      100
+      100,
     );
     const status = (req.query.status || "").trim();
     const q = (req.query.q || "").trim();
@@ -47,21 +50,16 @@ exports.getUsers = async (req, res) => {
     // Filter by role (if specified)
     if (role) {
       filter.role = role;
-      
     }
     // Filter to exclude admin users if specified
     else if (req.query.excludeAdmin === "true") {
       filter.role = { $ne: "admin" };
-      
     }
 
     // Filter only users who have submitted verification documents
     if (onlySubmitted) {
       filter["verification.submittedAt"] = { $exists: true };
-     
     }
-
-   
 
     // Search filter
     if (q) {
@@ -162,7 +160,7 @@ exports.updateUserRole = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { role },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("name email role isVerified phone createdAt");
 
     if (!user)
@@ -248,7 +246,7 @@ exports.verifyUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { $set: update },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     )
       .select("-password")
       .lean();
@@ -266,6 +264,128 @@ exports.verifyUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while updating verification status",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Send newsletter to subscribed emails (Termii template)
+// @route   POST /api/admin/newsletter/send
+// @access  Admin (or API key)
+exports.sendNewsletter = async (req, res) => {
+  try {
+    const {
+      subject,
+      content,
+      variables = {},
+      templateId,
+      limit,
+      cursor,
+    } = req.body || {};
+
+    const tmpl = String(
+      templateId || process.env.TERMII_TEMPLATE_NEWSLETTER || "",
+    ).trim();
+    if (!tmpl) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing Termii template ID. Set TERMII_TEMPLATE_NEWSLETTER or pass templateId.",
+      });
+    }
+
+    if (!subject || typeof subject !== "string") {
+      return res
+        .status(400)
+        .json({ success: false, message: "subject is required" });
+    }
+    if (!content || typeof content !== "string") {
+      return res
+        .status(400)
+        .json({ success: false, message: "content is required" });
+    }
+
+    const batchLimit = Math.min(Math.max(parseInt(limit || "100", 10), 1), 500);
+
+    const query = { status: "subscribed" };
+    if (cursor) {
+      try {
+        query._id = { $gt: new mongoose.Types.ObjectId(String(cursor)) };
+      } catch (_e) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid cursor" });
+      }
+    }
+
+    const subs = await NewsletterSubscriber.find(query)
+      .sort({ _id: 1 })
+      .limit(batchLimit)
+      .select("email")
+      .lean();
+
+    if (!subs.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No subscribed emails found for this batch.",
+        sent: 0,
+        failed: 0,
+        nextCursor: null,
+      });
+    }
+
+    const appUrl = process.env.APP_URL || "";
+
+    let sent = 0;
+    let failed = 0;
+    const failures = [];
+
+    // Sequential send for predictable rate limiting (use limit/cursor for larger sends)
+    for (const s of subs) {
+      try {
+        const email = s.email;
+        await sendTemplateEmail({
+          email,
+          subject,
+          templateId: tmpl,
+          variables: {
+            subject,
+            content,
+            unsubscribe_email: email,
+            unsubscribe_url: appUrl
+              ? `${appUrl}/unsubscribe?email=${encodeURIComponent(email)}`
+              : "",
+            ...variables,
+          },
+        });
+        sent++;
+      } catch (err) {
+        failed++;
+        if (failures.length < 25) {
+          failures.push({
+            email: s.email,
+            error: err?.message || String(err),
+          });
+        }
+      }
+    }
+
+    const nextCursor = String(subs[subs.length - 1]._id);
+    return res.status(200).json({
+      success: true,
+      message: "Newsletter batch processed.",
+      sent,
+      failed,
+      failures,
+      nextCursor,
+      batchSize: subs.length,
+      hasMore: subs.length === batchLimit,
+    });
+  } catch (error) {
+    console.error("sendNewsletter error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error sending newsletter",
       error: error.message,
     });
   }
