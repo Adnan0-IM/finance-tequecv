@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { api, getApiErrorMessage } from "@/lib/api";
-import type { FormValues, StartupFormValues } from "../schema";
+import type { FormValues, RedemptionFormValues, StartupFormValues } from "../schema";
 import type { verificationStatusResponse } from "@/types/verification";
 import type { CorporateVerificationForm } from "@/features/investors/corporate/schema";
 
@@ -15,6 +15,7 @@ interface InvestorContextType {
   submitCorporateVerification: (
     data: CorporateVerificationForm
   ) => Promise<void>;
+  submitRedemptionRequest: (values: RedemptionFormValues) => Promise<void>;
 }
 
 const InvestorContext = createContext<InvestorContextType | undefined>(
@@ -158,7 +159,18 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
-
+const submitRedemptionRequest = async (values : RedemptionFormValues) => {
+    // Implementation for submitting redemption request
+    try {
+      setLoading(true);
+      await api.post("/redemption", values);
+    } catch (error) {
+      const message = getApiErrorMessage(error);
+      throw new Error(message || "Failed to submit redemption request");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <InvestorContext.Provider
       value={{
@@ -168,6 +180,7 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
         verificationSubmitted,
         verStatus,
         submitCorporateVerification,
+        submitRedemptionRequest,
       }}
     >
       {children}

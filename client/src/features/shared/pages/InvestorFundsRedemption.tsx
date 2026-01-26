@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,109 +25,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {  getApiErrorMessage } from "@/lib/api";
+import { redemptionFormSchema, type RedemptionFormValues } from "../schema";
+import { useInvestor } from "../contexts/Investor-startupContext";
 
-// -----------------------------
-// 1) Validation schema
-// -----------------------------
-const baseSchema = z.object({
-  investmentId: z.string().min(3, "Investment ID is required"),
-  date: z.string().min(1, "Date is required"),
 
-  fundType: z.enum(["ethical", "equity", "debt"] as const, {
-    message: "Select a fund type",
-  }),
-
-  amountFigures: z
-    .string()
-    .transform((v) => v.replaceAll(",", "").trim())
-    .refine((v) => /^\d+(\.\d{1,2})?$/.test(v), "Enter a valid amount"),
-
-  amountWords: z.string().min(5, "Amount in words is required"),
-
-  redemptionType: z.enum(["partial", "full"] as const, {
-    message: "Select redemption type",
-  }),
-
-  fullName: z.string().min(3, "Full name is required"),
-  address: z.string().min(5, "Address is required"),
-  city: z.string().min(2, "City/Town is required"),
-  lga: z.string().min(2, "LGA is required"),
-  state: z.string().min(2, "State is required"),
-
-  phone: z.string().min(7, "Phone number is required"),
-  email: z.string().email("Enter a valid email"),
-
-  bankName: z.string().optional(),
-  accountName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  accountType: z.string().optional(),
-
-  confirmAuthorized: z
-    .boolean()
-    .refine((v) => v === true, "You must confirm this request is authorized"),
-});
-
-const formSchema = baseSchema.superRefine((values, ctx) => {
-  const bankName = values.bankName?.trim() ?? "";
-  const accountName = values.accountName?.trim() ?? "";
-  const accountNumber = values.accountNumber?.trim() ?? "";
-  const accountType = values.accountType?.trim() ?? "";
-
-  const anyProvided =
-    bankName.length > 0 ||
-    accountName.length > 0 ||
-    accountNumber.length > 0 ||
-    accountType.length > 0;
-
-  if (!anyProvided) return;
-
-  if (!bankName) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Bank name is required when providing bank details",
-      path: ["bankName"],
-    });
-  }
-
-  if (!accountName) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Account name is required when providing bank details",
-      path: ["accountName"],
-    });
-  }
-
-  if (!accountNumber) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Account number is required when providing bank details",
-      path: ["accountNumber"],
-    });
-  } else if (!/^\d{10}$/.test(accountNumber)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Account number must be 10 digits",
-      path: ["accountNumber"],
-    });
-  }
-
-  if (!accountType) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Account type is required when providing bank details",
-      path: ["accountType"],
-    });
-  }
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-// -----------------------------
-// 2) Component
-// -----------------------------
 export default function RedemptionForm() {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+
+  const { submitRedemptionRequest } = useInvestor();
+  const form = useForm<RedemptionFormValues>({
+    resolver: zodResolver(redemptionFormSchema),
     mode: "onChange",
     defaultValues: {
       investmentId: "",
@@ -151,16 +58,14 @@ export default function RedemptionForm() {
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
-    // Replace with your API call
-    console.log("Submitted values", values);
-
-    // Example POST
-    // await fetch("/api/redemption", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(values),
-    // })
+  const onSubmit = async (values: RedemptionFormValues) => {
+    try {
+      await submitRedemptionRequest(values);
+      toast.success("Redemption request submitted successfully");
+      form.reset();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
   };
 
   return (
@@ -531,8 +436,14 @@ export default function RedemptionForm() {
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Submit Redemption Request
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting
+                  ? "Submitting..."
+                  : "Submit Redemption Request"}
               </Button>
             </form>
           </Form>
