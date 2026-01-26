@@ -8,9 +8,18 @@ try {
   const User = require("./models/User"); // adjust if different
   schemas.User = m2s(User, { omitFields: ["password", "__v"] });
 
+  const RedemptionRequest = require("./models/RedemptionRequest");
+  schemas.RedemptionRequest = m2s(RedemptionRequest, { omitFields: ["__v"] });
+
   // Enhance User schema with descriptions
   schemas.User.properties = schemas.User.properties || {};
   schemas.User.description = "User account information";
+
+  // Enhance RedemptionRequest schema
+  schemas.RedemptionRequest.properties =
+    schemas.RedemptionRequest.properties || {};
+  schemas.RedemptionRequest.description =
+    "Investor funds redemption request submitted by a user";
 
   // Add descriptions to User properties
   if (schemas.User.properties.name) {
@@ -94,6 +103,107 @@ try {
       },
     },
   };
+
+  // Redemption request schema for creation (includes confirmAuthorized which is not persisted)
+  schemas.RedemptionRequestCreate = {
+    type: "object",
+    required: [
+      "investmentId",
+      "date",
+      "fundType",
+      "amountFigures",
+      "amountWords",
+      "redemptionType",
+      "fullName",
+      "address",
+      "city",
+      "lga",
+      "state",
+      "phone",
+      "email",
+      "confirmAuthorized",
+    ],
+    properties: {
+      investmentId: {
+        type: "string",
+        example: "INV-12345",
+        description: "Investor's investment identifier",
+      },
+      date: {
+        type: "string",
+        example: "2026-01-26",
+        description: "Request date (YYYY-MM-DD)",
+      },
+      fundType: {
+        type: "string",
+        enum: ["ethical", "equity", "debt"],
+        example: "ethical",
+      },
+      amountFigures: {
+        type: "string",
+        example: "250000",
+        description: "Amount in figures (string; commas removed client-side)",
+      },
+      amountWords: {
+        type: "string",
+        example: "Two Hundred and Fifty Thousand Naira",
+      },
+      redemptionType: {
+        type: "string",
+        enum: ["partial", "full"],
+        example: "partial",
+      },
+      fullName: { type: "string", example: "John Doe" },
+      address: { type: "string", example: "12, Example Street" },
+      city: { type: "string", example: "Lagos" },
+      lga: { type: "string", example: "Ikeja" },
+      state: { type: "string", example: "Lagos" },
+      phone: { type: "string", example: "08012345678" },
+      email: { type: "string", format: "email", example: "john@example.com" },
+
+      bankName: { type: "string", example: "Example Bank" },
+      accountName: { type: "string", example: "John Doe" },
+      accountNumber: {
+        type: "string",
+        example: "0123456789",
+        description:
+          "10-digit account number (required if any bank field is provided)",
+      },
+      accountType: {
+        type: "string",
+        enum: ["savings", "current", "domiciliary"],
+        example: "savings",
+      },
+
+      confirmAuthorized: {
+        type: "boolean",
+        example: true,
+        description: "Must be true to submit",
+      },
+    },
+  };
+
+  schemas.RedemptionRequestCreateResponse = {
+    type: "object",
+    properties: {
+      success: { type: "boolean", example: true },
+      message: { type: "string", example: "Redemption request submitted" },
+      data: {
+        type: "object",
+        properties: {
+          id: { type: "string", example: "65b3b5f7a0c1e9a4d0c0d123" },
+        },
+      },
+    },
+  };
+
+  schemas.ErrorResponse = {
+    type: "object",
+    properties: {
+      success: { type: "boolean", example: false },
+      message: { type: "string", example: "Validation error" },
+    },
+  };
 } catch (_) {
   // Model not found yet; you can add later.
 }
@@ -123,6 +233,7 @@ const definition = {
       description: "User verification and document upload endpoints",
     },
     { name: "Admin", description: "Admin-only endpoints for user management" },
+    { name: "Redemption", description: "Investor fund redemption endpoints" },
   ],
   components: {
     securitySchemes: {
