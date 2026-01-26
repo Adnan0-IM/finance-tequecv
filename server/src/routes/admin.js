@@ -22,11 +22,79 @@ router.use(apiKeyOrBearerAdmin);
  *   get:
  *     tags: [Admin]
  *     summary: Get all users (admin or API key)
+ *     description: |
+ *       Supports pagination + filtering by role/verification status and free-text search.
+ *       Authentication can be either an admin JWT (bearerAuth) or a trusted system API key (ApiKeyAuth).
  *     security:
  *       - bearerAuth: []
  *       - ApiKeyAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Page size (max 100)
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *         description: Filter by verification.status
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [investor, startup, admin, none]
+ *         description: Filter by user role. If provided, overrides excludeAdmin.
+ *       - in: query
+ *         name: excludeAdmin
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Exclude admin users from results (ignored if role is provided)
+ *       - in: query
+ *         name: onlySubmitted
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Return only users who have submitted verification (verification.submittedAt exists)
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search across email/name/phone and selected verification fields
  *     responses:
- *       200: { description: OK }
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page: { type: integer, example: 1 }
+ *                     limit: { type: integer, example: 20 }
+ *                     total: { type: integer, example: 133 }
+ *                     pages: { type: integer, example: 7 }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden }
  */
@@ -41,7 +109,7 @@ router.get("/users", getUsers);
  *       - Admin
  *     security:
  *       - bearerAuth: []
- *         ApiKeyAuth: []
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -61,95 +129,30 @@ router.get("/users", getUsers);
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     phone:
- *                       type: string
- *                     role:
- *                       type: string
- *                       enum: [investor, startup, admin]
- *                     isVerified:
- *                       type: boolean
- *                     verification:
- *                       type: object
+ *                   allOf:
+ *                     - $ref: '#/components/schemas/User'
+ *                     - type: object
+ *                       description: |
+ *                         Note: admin responses also include computed verification document URLs when present.
  *                       properties:
- *                         personal:
+ *                         verification:
  *                           type: object
  *                           properties:
- *                             firstName:
- *                               type: string
- *                             surname:
- *                               type: string
- *                             dateOfBirth:
- *                               type: string
- *                             localGovernment:
- *                               type: string
- *                             stateOfResidence:
- *                               type: string
- *                             residentialAddress:
- *                               type: string
- *                             ninNumber:
- *                               type: string
- *                         nextOfKin:
- *                           type: object
- *                           properties:
- *                             fullName:
- *                               type: string
- *                             phoneNumber:
- *                               type: string
- *                             email:
- *                               type: string
- *                             residentialAddress:
- *                               type: string
- *                             relationship:
- *                               type: string
- *                         bankDetails:
- *                           type: object
- *                           properties:
- *                             accountName:
- *                               type: string
- *                             accountNumber:
- *                               type: string
- *                             bankName:
- *                               type: string
- *                             bvnNumber:
- *                               type: string
- *                             accountType:
- *                               type: string
- *                         documents:
- *                           type: object
- *                           properties:
- *                             idDocument:
- *                               type: string
- *                             idDocumentUrl:
- *                               type: string
- *                             passportPhoto:
- *                               type: string
- *                             passportPhotoUrl:
- *                               type: string
- *                             utilityBill:
- *                               type: string
- *                             utilityBillUrl:
- *                               type: string
- *                         status:
- *                           type: string
- *                           enum: [pending, approved, rejected]
- *                         rejectionReason:
- *                           type: string
- *                         reviewedAt:
- *                           type: string
- *                           format: date-time
- *                         reviewedBy:
- *                           type: string
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                       _id:
- *                         type: string
+ *                             documents:
+ *                               type: object
+ *                               properties:
+ *                                 idDocumentUrl:
+ *                                   type: string
+ *                                   format: uri
+ *                                   nullable: true
+ *                                 passportPhotoUrl:
+ *                                   type: string
+ *                                   format: uri
+ *                                   nullable: true
+ *                                 utilityBillUrl:
+ *                                   type: string
+ *                                   format: uri
+ *                                   nullable: true
  *       401:
  *         description: Not authenticated
  *       403:
@@ -166,6 +169,9 @@ router.get("/users/:id", getUser);
  *   post:
  *     tags: [Admin]
  *     summary: Send newsletter email batch (Termii template)
+ *     description: |
+ *       Sends a single batch to Newsletter subscribers (status=subscribed).
+ *       Use limit + cursor to page through recipients for large sends.
  *     security:
  *       - bearerAuth: []
  *       - ApiKeyAuth: []
@@ -179,14 +185,32 @@ router.get("/users/:id", getUser);
  *             properties:
  *               subject:
  *                 type: string
+ *                 example: January newsletter
  *               content:
  *                 type: string
+ *                 example: Hello! Here's what's new...
  *               templateId:
  *                 type: string
  *                 description: Optional override for TERMII_TEMPLATE_NEWSLETTER
  *               variables:
  *                 type: object
- *                 description: Extra Termii template variables
+ *                 description: |
+ *                   Extra Termii template variables merged into the default variables.
+ *                   Defaults always include: subject, content, unsubscribe_email, unsubscribe_url.
+ *                 additionalProperties: true
+ *                 properties:
+ *                   subject:
+ *                     type: string
+ *                     description: Optional override for the email subject variable
+ *                   content:
+ *                     type: string
+ *                     description: Optional override for the email content variable
+ *                   unsubscribe_email:
+ *                     type: string
+ *                     format: email
+ *                   unsubscribe_url:
+ *                     type: string
+ *                     format: uri
  *               limit:
  *                 type: number
  *                 description: Batch size (default 100, max 500)
@@ -194,7 +218,31 @@ router.get("/users/:id", getUser);
  *                 type: string
  *                 description: ObjectId cursor from previous response
  *     responses:
- *       200: { description: OK }
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: Newsletter batch processed. }
+ *                 sent: { type: integer, example: 90 }
+ *                 failed: { type: integer, example: 10 }
+ *                 failures:
+ *                   type: array
+ *                   description: Up to 25 failures returned for debugging
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       email: { type: string, format: email }
+ *                       error: { type: string }
+ *                 nextCursor:
+ *                   type: string
+ *                   nullable: true
+ *                   description: Pass as cursor in the next request to continue
+ *                 batchSize: { type: integer, example: 100 }
+ *                 hasMore: { type: boolean, example: true }
  *       400: { description: Bad Request }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden }
@@ -210,7 +258,7 @@ router.post("/newsletter/send", sendNewsletter);
  *       - Admin
  *     security:
  *       - bearerAuth: []
- *         ApiKeyAuth: []
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -246,89 +294,28 @@ router.post("/newsletter/send", sendNewsletter);
  *                   type: boolean
  *                   example: true
  *                 data:
- *                     type: object
- *                     properties:
- *                       name:
- *                         type: string
- *                       email:
- *                         type: string
- *                       phone:
- *                         type: string
- *                       role:
- *                         type: string
- *                         enum: [investor, startup, admin]
- *                       isVerified:
- *                         type: boolean
- *                       verification:
- *                         type: object
- *                         properties:
- *                           personal:
- *                             type: object
- *                             properties:
- *                               firstName:
- *                                 type: string
- *                               surname:
- *                                 type: string
- *                               dateOfBirth:
- *                                 type: string
- *                               localGovernment:
- *                                 type: string
- *                               stateOfResidence:
- *                                 type: string
- *                               residentialAddress:
- *                                 type: string
- *                               ninNumber:
- *                                 type: string
- *                           nextOfKin:
- *                             type: object
- *                             properties:
- *                               fullName:
- *                                 type: string
- *                               phoneNumber:
- *                                 type: string
- *                               email:
- *                                 type: string
- *                               residentialAddress:
- *                                 type: string
- *                               relationship:
- *                                 type: string
- *                           bankDetails:
- *                             type: object
- *                             properties:
- *                               accountName:
- *                                 type: string
- *                               accountNumber:
- *                                 type: string
- *                               bankName:
- *                                 type: string
- *                               bvnNumber:
- *                                 type: string
- *                               accountType:
- *                                 type: string
- *                           documents:
- *                             type: object
- *                             properties:
- *                               idDocument:
- *                                 type: string
- *                               idDocumentUrl:
- *                                 type: string
- *                               passportPhoto:
- *                                 type: string
- *                               passportPhotoUrl:
- *                                 type: string
- *                               utilityBill:
- *                                 type: string
- *                               utilityBillUrl:
- *                                 type: string
- *                           status:
- *                             type: string
- *                             enum: [pending, approved, rejected]
- *                           rejectionReason:
- *                             type: string
- *                           reviewedAt:
- *                             type: string
- *                           reviewedBy:
- *                             type: string
+ *                   allOf:
+ *                     - $ref: '#/components/schemas/User'
+ *                     - type: object
+ *                       properties:
+ *                         verification:
+ *                           type: object
+ *                           properties:
+ *                             documents:
+ *                               type: object
+ *                               properties:
+ *                                 idDocumentUrl:
+ *                                   type: string
+ *                                   format: uri
+ *                                   nullable: true
+ *                                 passportPhotoUrl:
+ *                                   type: string
+ *                                   format: uri
+ *                                   nullable: true
+ *                                 utilityBillUrl:
+ *                                   type: string
+ *                                   format: uri
+ *                                   nullable: true
  *       400:
  *         description: Invalid status
  *       401:
@@ -351,7 +338,7 @@ router.patch("/users/:id/verification-status", verifyUser);
  *       - Admin
  *     security:
  *       - bearerAuth: []
- *         ApiKeyAuth: []
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -381,10 +368,6 @@ router.patch("/users/:id/verification-status", verifyUser);
  *                     rejectionReason:
  *                       type: string
  *                       description: Reason for rejection if status is rejected
- *                     verifiedAt:
- *                       type: string
- *                       format: date-time
- *                       description: Timestamp when the user was verified
  *                     reviewedAt:
  *                       type: string
  *                       format: date-time
@@ -414,7 +397,7 @@ router.get("/users/:id/verification-status", userVerificationStatus);
  *       - Admin
  *     security:
  *       - bearerAuth: []
- *         ApiKeyAuth: []
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -431,7 +414,7 @@ router.get("/users/:id/verification-status", userVerificationStatus);
  *             properties:
  *               role:
  *                 type: string
- *                 enum: [admin, investor, startup]
+ *                 enum: [admin, investor, startup, none]
  *                 description: New role for the user
  *     responses:
  *       200:
@@ -447,7 +430,7 @@ router.get("/users/:id/verification-status", userVerificationStatus);
  *                 data:
  *                   type: object
  *                   properties:
- *                     id:
+ *                     _id:
  *                       type: string
  *                     name:
  *                       type: string
@@ -462,8 +445,6 @@ router.get("/users/:id/verification-status", userVerificationStatus);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                     _id:
- *                       type: string
  *       400:
  *         description: Invalid role
  *       401:
@@ -485,7 +466,7 @@ router.patch("/users/:id/role", updateUserRole);
  *       - Admin
  *     security:
  *       - bearerAuth: []
- *         ApiKeyAuth: []
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -547,6 +528,14 @@ router.delete("/users/:id", deleteUser);
  *     responses:
  *       201:
  *         description: Sub-admin created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
  *       400:
  *         description: Validation error
  *       401:
