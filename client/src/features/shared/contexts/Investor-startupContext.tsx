@@ -1,25 +1,42 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useCallback,
+  useState,
+  type ReactNode,
+} from "react";
 import { api, getApiErrorMessage } from "@/lib/api";
-import type { FormValues, RedemptionFormValues, StartupFormValues } from "../schema";
+import type {
+  FormValues,
+  RedemptionFormValues,
+  StartupFormValues,
+} from "../schema";
 import type { verificationStatusResponse } from "@/types/verification";
 import type { CorporateVerificationForm } from "@/features/investors/corporate/schema";
 
 interface InvestorContextType {
   loading: boolean;
   submitVerification: (
-    verificationData: FormValues | StartupFormValues
+    verificationData: FormValues | StartupFormValues,
   ) => Promise<void>;
   verificationStatus: () => Promise<verificationStatusResponse>;
   verificationSubmitted: boolean;
   verStatus: verStatus | null;
   submitCorporateVerification: (
-    data: CorporateVerificationForm
+    data: CorporateVerificationForm,
   ) => Promise<void>;
   submitRedemptionRequest: (values: RedemptionFormValues) => Promise<void>;
+  getRedemptionBankDetails: () => Promise<
+    Pick<
+      RedemptionFormValues,
+      "bankName" | "accountName" | "accountNumber" | "accountType"
+    >
+  >;
 }
 
 const InvestorContext = createContext<InvestorContextType | undefined>(
-  undefined
+  undefined,
 );
 type verStatus = {
   status: "approved" | "pending" | "rejected" | "";
@@ -34,56 +51,57 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
   const [verStatus, setVerStatus] = useState<verStatus | null>(null);
   const [verificationSubmitted, setVerificationSubmitted] = useState(false);
 
-  const submitVerification = async (
-    verificationData: FormValues | StartupFormValues
-  ) => {
-    const {
-      identificationDocument,
-      passportPhoto,
-      utilityBill,
-      ...textFields
-    } = verificationData;
+  const submitVerification = useCallback(
+    async (verificationData: FormValues | StartupFormValues) => {
+      const {
+        identificationDocument,
+        passportPhoto,
+        utilityBill,
+        ...textFields
+      } = verificationData;
 
-    const submitTextfields = async (fields: Record<string, unknown>) => {
-      const response = await api.post(`/verification`, fields);
-      return response.data;
-    };
+      const submitTextfields = async (fields: Record<string, unknown>) => {
+        const response = await api.post(`/verification`, fields);
+        return response.data;
+      };
 
-    const submitDocs = async (
-      identificationDocument: File,
-      passportPhoto: File,
-      utilityBill: File
-    ) => {
-      const formData = new FormData();
-      formData.append("identificationDocument", identificationDocument);
-      formData.append("passportPhoto", passportPhoto);
-      formData.append("utilityBill", utilityBill);
+      const submitDocs = async (
+        identificationDocument: File,
+        passportPhoto: File,
+        utilityBill: File,
+      ) => {
+        const formData = new FormData();
+        formData.append("identificationDocument", identificationDocument);
+        formData.append("passportPhoto", passportPhoto);
+        formData.append("utilityBill", utilityBill);
 
-      const response = await api.post(`/verification/documents`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return response.data;
-    };
+        const response = await api.post(`/verification/documents`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        return response.data;
+      };
 
-    try {
-      setLoading(true);
-      await submitTextfields(textFields);
-      await submitDocs(
-        identificationDocument as File,
-        passportPhoto as File,
-        utilityBill as File
-      );
-      setVerificationSubmitted(true);
-    } catch (error) {
-      const message = getApiErrorMessage(error);
-      console.log(error);
-      throw new Error(message || "Failed to submit verification data");
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        setLoading(true);
+        await submitTextfields(textFields);
+        await submitDocs(
+          identificationDocument as File,
+          passportPhoto as File,
+          utilityBill as File,
+        );
+        setVerificationSubmitted(true);
+      } catch (error) {
+        const message = getApiErrorMessage(error);
+        console.log(error);
+        throw new Error(message || "Failed to submit verification data");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
-  const verificationStatus = async () => {
+  const verificationStatus = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/verification/status`);
@@ -95,94 +113,132 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const submitCorporateVerification = async (
-    data: CorporateVerificationForm
-  ) => {
-    const { company, bankDetails, documents, signatories, referral } = data;
-    console.log(data);
-    const textPayload = {
-      company: { ...company, logo: undefined },
-      bankDetails,
-      signatories: signatories.map(
-        ({ fullName, position, phoneNumber, bvnNumber, email }) => ({
-          fullName,
-          position,
-          phoneNumber,
-          bvnNumber,
-          email,
-        })
-      ),
-      referral,
-    };
-    console.log(`Text Payload: ${textPayload}`);
-    const submitText = async () => {
-      const res = await api.post(`/verification/corporate`, textPayload);
-      return res.data;
-    };
+  const submitCorporateVerification = useCallback(
+    async (data: CorporateVerificationForm) => {
+      const { company, bankDetails, documents, signatories, referral } = data;
+      console.log(data);
+      const textPayload = {
+        company: { ...company, logo: undefined },
+        bankDetails,
+        signatories: signatories.map(
+          ({ fullName, position, phoneNumber, bvnNumber, email }) => ({
+            fullName,
+            position,
+            phoneNumber,
+            bvnNumber,
+            email,
+          }),
+        ),
+        referral,
+      };
+      console.log(`Text Payload: ${textPayload}`);
+      const submitText = async () => {
+        const res = await api.post(`/verification/corporate`, textPayload);
+        return res.data;
+      };
 
-    const submitDocs = async () => {
-      const fd = new FormData();
-      if (company.logo instanceof File) fd.append("companyLogo", company.logo);
+      const submitDocs = async () => {
+        const fd = new FormData();
+        if (company.logo instanceof File)
+          fd.append("companyLogo", company.logo);
 
-      fd.append(
-        "certificateOfIncorporation",
-        documents.certificateOfIncorporation
+        fd.append(
+          "certificateOfIncorporation",
+          documents.certificateOfIncorporation,
+        );
+        if (documents.memorandumAndArticles)
+          fd.append("memorandumAndArticles", documents.memorandumAndArticles);
+        fd.append("utilityBill", documents.utilityBill);
+        if (documents.tinCertificate)
+          fd.append("tinCertificate", documents.tinCertificate);
+
+        signatories.forEach((s, i) => {
+          if (s.idDocument instanceof File)
+            fd.append(`signatories[${i}][idDocument]`, s.idDocument);
+        });
+        console.log(`Form Data: ${fd}`);
+        const res = await api.post(`/verification/corporate/documents`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        return res.data;
+      };
+
+      try {
+        setLoading(true);
+        await submitText();
+        await submitDocs();
+        setVerificationSubmitted(true);
+      } catch (error) {
+        const message = getApiErrorMessage(error);
+        throw new Error(message || "Failed to submit corporate verification");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const submitRedemptionRequest = useCallback(
+    async (values: RedemptionFormValues) => {
+      try {
+        setLoading(true);
+        await api.post("/redemption", values);
+      } catch (error) {
+        const message = getApiErrorMessage(error);
+        throw new Error(message || "Failed to submit redemption request");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const getRedemptionBankDetails = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/redemption/bank-details");
+      return (
+        res.data?.data || {
+          bankName: "",
+          accountName: "",
+          accountNumber: "",
+          accountType: "",
+        }
       );
-      if (documents.memorandumAndArticles)
-        fd.append("memorandumAndArticles", documents.memorandumAndArticles);
-      fd.append("utilityBill", documents.utilityBill);
-      if (documents.tinCertificate)
-        fd.append("tinCertificate", documents.tinCertificate);
-
-      signatories.forEach((s, i) => {
-        if (s.idDocument instanceof File)
-          fd.append(`signatories[${i}][idDocument]`, s.idDocument);
-      });
-      console.log(`Form Data: ${fd}`);
-      const res = await api.post(`/verification/corporate/documents`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return res.data;
-    };
-
-    try {
-      setLoading(true);
-      await submitText();
-      await submitDocs();
-      setVerificationSubmitted(true);
     } catch (error) {
       const message = getApiErrorMessage(error);
-      throw new Error(message || "Failed to submit corporate verification");
+      throw new Error(message || "Failed to fetch bank details");
     } finally {
       setLoading(false);
     }
-  };
-const submitRedemptionRequest = async (values : RedemptionFormValues) => {
-    // Implementation for submitting redemption request
-    try {
-      setLoading(true);
-      await api.post("/redemption", values);
-    } catch (error) {
-      const message = getApiErrorMessage(error);
-      throw new Error(message || "Failed to submit redemption request");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      submitVerification,
+      verificationStatus,
+      loading,
+      verificationSubmitted,
+      verStatus,
+      submitCorporateVerification,
+      submitRedemptionRequest,
+      getRedemptionBankDetails,
+    }),
+    [
+      submitVerification,
+      verificationStatus,
+      loading,
+      verificationSubmitted,
+      verStatus,
+      submitCorporateVerification,
+      submitRedemptionRequest,
+      getRedemptionBankDetails,
+    ],
+  );
   return (
-    <InvestorContext.Provider
-      value={{
-        submitVerification,
-        verificationStatus,
-        loading,
-        verificationSubmitted,
-        verStatus,
-        submitCorporateVerification,
-        submitRedemptionRequest,
-      }}
-    >
+    <InvestorContext.Provider value={value}>
       {children}
     </InvestorContext.Provider>
   );
