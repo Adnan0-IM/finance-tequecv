@@ -7,6 +7,7 @@ const verificationRoutes = require("./routes/verification");
 const adminRoutes = require("./routes/admin");
 const carouselRoutes = require("./routes/carousel");
 const uploadRoutes = require("./routes/uploads");
+const redemptionRoutes = require("./routes/redemption");
 const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 const swaggerSpec = require("./swagger");
@@ -36,7 +37,7 @@ app.use(
   swaggerUi.setup(swaggerSpec, {
     explorer: true,
     customCss: ".swagger-ui .topbar { display: none }",
-  })
+  }),
 );
 
 // Enable CORS
@@ -49,7 +50,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Skip-Auth-Retry"],
-  })
+  }),
 );
 // Expose raw OpenAPI JSON for Postman import
 app.get("/api-docs.json", (_req, res) => {
@@ -66,6 +67,7 @@ app.use("/api", subscribeRoute);
 app.use("/api/admin", adminRoutes);
 app.use("/api/carousel", carouselRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/redemption", redemptionRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "../..", "client", "dist")));
@@ -77,7 +79,7 @@ app.use(
   express.static(UPLOADS_DIR, {
     fallthrough: false,
     maxAge: "7d",
-  })
+  }),
 );
 
 // Instead of using a wildcard, let's use a specific route for the SPA
