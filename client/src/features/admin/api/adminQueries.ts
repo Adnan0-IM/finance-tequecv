@@ -83,7 +83,7 @@ const setUserRoleApi = async ({
 
 const verifyUserApi = async ({ userId, statusObject }: verifyUserPropTypes) => {
   try {
-    const response = await api.patch(
+    const response = await api.post(
       `/admin/users/${userId}/verification-status`,
       statusObject
     );

@@ -252,7 +252,7 @@ router.post("/newsletter/send", sendNewsletter);
 /**
  * @openapi
  * /api/admin/users/{id}/verification-status:
- *   patch:
+ *   post:
  *     summary: Update verification status of a user
  *     tags:
  *       - Admin
@@ -325,9 +325,9 @@ router.post("/newsletter/send", sendNewsletter);
  *       404:
  *         description: User not found
  */
-// PATCH /api/admin/users/:id/verification-status
+// POST /api/admin/users/:id/verification-status
 // body: { status: "approved" | "rejected", rejectionReason?: string }
-router.patch("/users/:id/verification-status", verifyUser);
+router.post("/users/:id/verification-status", verifyUser);
 
 /**
  * @openapi
