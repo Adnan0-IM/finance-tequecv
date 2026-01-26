@@ -1,91 +1,44 @@
-import ProtectedRoute from "@/features/auth/routing/ProtectedRoute";
-import RoleGuard from "@/features/auth/routing/RoleGuard";
-import OnboardingGuard from "@/features/auth/routing/OnboardingGuard";
 import { Route, Routes } from "react-router";
 import Loader from "../components/feedback/Loader";
 import { AnimatePresence, motion } from "framer-motion";
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
-import StartupApplicationPage from "../features/startup/pages/StartupVerification";
-import ProfileChoicePage from "../features/shared/pages/ChooseProfile-Role";
-import AdminDashboard from "../features/admin/pages/AdminDashboard";
-import NotFoundPage from "@/components/feedback/NotFound";
-import Users from "@/features/admin/pages/Users";
-import Verification from "@/features/admin/pages/Verification";
-import UserVerificationDetails from "@/features/admin/pages/UserVerificationDetails";
-import ManageCarouselPage from "@/features/admin/carousel/pages/ManageCarouselPage";
-import InvestorTypePage from "@/features/investors/pages/InvestorTypePage";
-import CorporateVerification from "@/features/investors/corporate/pages/CorporateVerification";
-import ManageSubAdmin from "@/features/admin/pages/ManageSubAdmin";
-import AdminGuard from "@/features/auth/routing/AdminGuad";
-import InvestorFundsRedemption from "@/features/shared/pages/InvestorFundsRedemption";
 
-const HomePage = lazy(() => import("../pages/HomePage"));
-const AboutPage = lazy(() =>
-  import("../pages/About").then((module) => ({ default: module.AboutPage })),
-);
-const InvestmentPlansPage = lazy(() =>
-  import("../pages/InvestmentPlans").then((module) => ({
-    default: module.InvestmentPlansPage,
-  })),
-);
-const AssetFinancingPage = lazy(() => import("../pages/BusinessFinancing"));
-const TeamPage = lazy(() => import("../pages/Team"));
-const ContactPage = lazy(() =>
-  import("../pages/Contact").then((module) => ({
-    default: module.ContactPage,
-  })),
-);
-const InvestmentPlanDetailPage = lazy(
-  () => import("../pages/InvestmentPlanDetails"),
-);
-const LoginPage = lazy(() =>
-  import("../features/auth/pages/Login").then((module) => ({
-    default: module.LoginPage,
-  })),
-);
-const RegisterPage = lazy(() =>
-  import("../features/auth/pages/Register").then((module) => ({
-    default: module.RegisterPage,
-  })),
-);
-const ResetPasswordPage = lazy(() =>
-  import("../features/auth/pages/Forget-ResetPassword").then((module) => ({
-    default: module.default,
-  })),
-);
-const UpdateProfilePage = lazy(() =>
-  import("../features/shared/pages/Profile").then((module) => ({
-    default: module.default,
-  })),
-);
-const VerifyEmailPage = lazy(() =>
-  import("../features/auth/pages/VerifyEmail").then((module) => ({
-    default: module.default,
-  })),
-);
-const ForgotPasswordPage = lazy(() =>
-  import("../features/auth/pages/ForgotPassword").then((module) => ({
-    default: module.default,
-  })),
-);
-const InvestorVerificationPage = lazy(() =>
-  import("../features/investors/personal/pages/InvestorVerification").then(
-    (module) => ({
-      default: module.InvestorVerificationPage,
-    }),
-  ),
-);
-const VerificationSuccessPage = lazy(() =>
-  import("../features/shared/pages/VerificationSuccess").then((module) => ({
-    default: module.VerificationSuccessPage,
-  })),
-);
-const DashboardPage = lazy(() =>
-  import("../features/shared/pages/Dashboard").then((module) => ({
-    default: module.DashboardPage,
-  })),
-);
+import ProtectedRoute from "@/features/auth/routing/ProtectedRoute";
+import OnboardingGuard from "@/features/auth/routing/OnboardingGuard";
+import RoleGuard from "@/features/auth/routing/RoleGuard";
+import AdminGuard from "@/features/auth/routing/AdminGuad";
+import {
+  HomePage,
+  AboutPage,
+  AssetFinancingPage,
+  InvestmentPlansPage,
+  InvestmentPlanDetailPage,
+  TeamPage,
+  ContactPage,
+  ProfileChoicePage,
+  InvestorTypePage,
+  CorporateVerification,
+  InvestorFundsRedemption,
+  StartupApplicationPage,
+  AdminDashboard,
+  Verification,
+  UserVerificationDetails,
+  Users,
+  ManageCarouselPage,
+  ManageSubAdmin,
+  DashboardPage,
+  UpdateProfilePage,
+  InvestorVerificationPage,
+  VerificationSuccessPage,
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  VerifyEmailPage,
+  ResetPasswordPage,
+  NotFoundPage,
+} from "./routesComponents";
+
 
 export default function AppRoutes() {
   return (
