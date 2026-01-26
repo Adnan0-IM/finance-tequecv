@@ -408,6 +408,11 @@ exports.userVerificationStatus = async (req, res) => {
         status: user.verification?.status || "none",
         isVerified: user.isVerified || false,
         rejectionReason: user.verification?.rejectionReason || "",
+        reviewedAt: user.verification?.reviewedAt || null,
+        reviewedBy: user.verification?.reviewedBy
+          ? String(user.verification.reviewedBy)
+          : null,
+        submittedAt: user.verification?.submittedAt || null,
       },
     });
   } catch (error) {

@@ -109,7 +109,6 @@ try {
     type: "object",
     required: [
       "investmentId",
-      "date",
       "fundType",
       "amountFigures",
       "amountWords",
@@ -132,7 +131,8 @@ try {
       date: {
         type: "string",
         example: "2026-01-26",
-        description: "Request date (YYYY-MM-DD)",
+        description:
+          "Request date (YYYY-MM-DD). Server assigns submission date; any client-provided value is ignored.",
       },
       fundType: {
         type: "string",
@@ -254,9 +254,9 @@ const definition = {
     },
     schemas, // populated from mongoose-to-swagger with enhancements
   },
-  // Default security: Bearer only. Admin routes override to require API key as well.
-
-  security: [{ bearerAuth: [], ApiKeyAuth: [] }],
+  // Default security: allow either Bearer token OR API key.
+  // Individual routes can still override with their own `security` blocks.
+  security: [{ bearerAuth: [] }, { ApiKeyAuth: [] }],
 };
 
 module.exports = swaggerJsdoc({

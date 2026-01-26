@@ -1,8 +1,16 @@
 const RedemptionRequest = require("../models/RedemptionRequest");
+const User = require("../models/User");
+
+const getTodayISODate = () => {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 const requiredFields = [
   "investmentId",
-  "date",
   "fundType",
   "amountFigures",
   "amountWords",
@@ -19,6 +27,14 @@ const requiredFields = [
 exports.createRedemptionRequest = async (req, res) => {
   try {
     const payload = req.body || {};
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     if (payload.confirmAuthorized !== true) {
       return res.status(400).json({
@@ -74,8 +90,10 @@ exports.createRedemptionRequest = async (req, res) => {
     }
 
     const doc = await RedemptionRequest.create({
+      userId,
       investmentId: payload.investmentId,
-      date: payload.date,
+      // Always set server-side so client cannot spoof submission date
+      date: getTodayISODate(),
       fundType: payload.fundType,
       amountFigures: String(payload.amountFigures),
       amountWords: payload.amountWords,
@@ -100,6 +118,72 @@ exports.createRedemptionRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Create redemption request error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+exports.getBankDetails = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const user = await User.findById(userId)
+      .select(
+        "role verification.bankDetails verification.corporate.bankDetails",
+      )
+      .lean();
+
+    const personal = user?.verification?.bankDetails || {};
+    const corporate = user?.verification?.corporate?.bankDetails || {};
+
+    const preferred = user?.role === "startup" ? corporate : personal;
+
+    const normalize = (obj) => ({
+      bankName: typeof obj.bankName === "string" ? obj.bankName : "",
+      accountName: typeof obj.accountName === "string" ? obj.accountName : "",
+      accountNumber:
+        typeof obj.accountNumber === "string" ? obj.accountNumber : "",
+      accountType: typeof obj.accountType === "string" ? obj.accountType : "",
+    });
+
+    let result = normalize(preferred);
+
+    const hasAny =
+      result.bankName ||
+      result.accountName ||
+      result.accountNumber ||
+      result.accountType;
+
+    if (!hasAny) {
+      const last = await RedemptionRequest.findOne({ userId })
+        .sort({ createdAt: -1 })
+        .select("bankName accountName accountNumber accountType")
+        .lean();
+
+      if (last) {
+        result = {
+          bankName: last.bankName || "",
+          accountName: last.accountName || "",
+          accountNumber: last.accountNumber || "",
+          accountType: last.accountType || "",
+        };
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Get redemption bank details error:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",

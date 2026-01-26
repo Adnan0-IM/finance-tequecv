@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const RedemptionRequestSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     investmentId: { type: String, required: true, trim: true },
     date: { type: String, required: true, trim: true },
 
