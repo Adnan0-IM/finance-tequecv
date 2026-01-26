@@ -18,72 +18,73 @@ import InvestorTypePage from "@/features/investors/pages/InvestorTypePage";
 import CorporateVerification from "@/features/investors/corporate/pages/CorporateVerification";
 import ManageSubAdmin from "@/features/admin/pages/ManageSubAdmin";
 import AdminGuard from "@/features/auth/routing/AdminGuad";
+import InvestorFundsRedemption from "@/features/shared/pages/InvestorFundsRedemption";
 
 const HomePage = lazy(() => import("../pages/HomePage"));
 const AboutPage = lazy(() =>
-  import("../pages/About").then((module) => ({ default: module.AboutPage }))
+  import("../pages/About").then((module) => ({ default: module.AboutPage })),
 );
 const InvestmentPlansPage = lazy(() =>
   import("../pages/InvestmentPlans").then((module) => ({
     default: module.InvestmentPlansPage,
-  }))
+  })),
 );
 const AssetFinancingPage = lazy(() => import("../pages/BusinessFinancing"));
 const TeamPage = lazy(() => import("../pages/Team"));
 const ContactPage = lazy(() =>
   import("../pages/Contact").then((module) => ({
     default: module.ContactPage,
-  }))
+  })),
 );
 const InvestmentPlanDetailPage = lazy(
-  () => import("../pages/InvestmentPlanDetails")
+  () => import("../pages/InvestmentPlanDetails"),
 );
 const LoginPage = lazy(() =>
   import("../features/auth/pages/Login").then((module) => ({
     default: module.LoginPage,
-  }))
+  })),
 );
 const RegisterPage = lazy(() =>
   import("../features/auth/pages/Register").then((module) => ({
     default: module.RegisterPage,
-  }))
+  })),
 );
 const ResetPasswordPage = lazy(() =>
   import("../features/auth/pages/Forget-ResetPassword").then((module) => ({
     default: module.default,
-  }))
+  })),
 );
 const UpdateProfilePage = lazy(() =>
   import("../features/shared/pages/Profile").then((module) => ({
     default: module.default,
-  }))
+  })),
 );
 const VerifyEmailPage = lazy(() =>
   import("../features/auth/pages/VerifyEmail").then((module) => ({
     default: module.default,
-  }))
+  })),
 );
 const ForgotPasswordPage = lazy(() =>
   import("../features/auth/pages/ForgotPassword").then((module) => ({
     default: module.default,
-  }))
+  })),
 );
 const InvestorVerificationPage = lazy(() =>
   import("../features/investors/personal/pages/InvestorVerification").then(
     (module) => ({
       default: module.InvestorVerificationPage,
-    })
-  )
+    }),
+  ),
 );
 const VerificationSuccessPage = lazy(() =>
   import("../features/shared/pages/VerificationSuccess").then((module) => ({
     default: module.VerificationSuccessPage,
-  }))
+  })),
 );
 const DashboardPage = lazy(() =>
   import("../features/shared/pages/Dashboard").then((module) => ({
     default: module.DashboardPage,
-  }))
+  })),
 );
 
 export default function AppRoutes() {
@@ -258,6 +259,21 @@ export default function AppRoutes() {
           />
 
           <Route
+            path="/funds-redemption"
+            element={
+              <ProtectedRoute>
+                <RoleGuard allow={["investor"]}>
+                  <OnboardingGuard>
+                    <Suspense fallback={<Loader />}>
+                      <InvestorFundsRedemption />
+                    </Suspense>
+                  </OnboardingGuard>
+                </RoleGuard>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/apply-for-funding"
             element={
               <ProtectedRoute>
@@ -355,7 +371,7 @@ export default function AppRoutes() {
               <ProtectedRoute>
                 <RoleGuard allow={["admin"]}>
                   <AdminGuard allow="superadmin">
-                  <ManageSubAdmin />
+                    <ManageSubAdmin />
                   </AdminGuard>
                 </RoleGuard>
               </ProtectedRoute>
