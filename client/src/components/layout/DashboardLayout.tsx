@@ -15,6 +15,7 @@ import {
   User2,
   RectangleHorizontal,
   Verified,
+  Banknote
 } from "lucide-react";
 import SwipeableLayout from "./SwipeableLayout";
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
   const navLinksInvestor = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
     { title: "Investments", path: "/dashboard/investments", icon: BarChart3 },
+    {title : "Funds Redemption", path: "/dashboard/funds-redemption", icon: Banknote },
     { title: "Transactions", path: "/dashboard/transactions", icon: Wallet },
     { title: "Settings", path: "/dashboard/settings", icon: Settings },
   ];
