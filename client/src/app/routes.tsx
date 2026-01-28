@@ -39,7 +39,6 @@ import {
   NotFoundPage,
 } from "./routesComponents";
 
-
 export default function AppRoutes() {
   return (
     <AnimatePresence mode="wait">
@@ -184,15 +183,15 @@ export default function AppRoutes() {
           <Route
             path="/investor-verification"
             element={
-              <ProtectedRoute>
-                <RoleGuard allow={["investor"]}>
-                  <OnboardingGuard>
-                    <Suspense fallback={<Loader />}>
-                      <InvestorVerificationPage />
-                    </Suspense>
-                  </OnboardingGuard>
-                </RoleGuard>
-              </ProtectedRoute>
+              // <ProtectedRoute>
+              //   <RoleGuard allow={["investor"]}>
+              //     <OnboardingGuard>
+              <Suspense fallback={<Loader />}>
+                <InvestorVerificationPage />
+              </Suspense>
+              //     </OnboardingGuard>
+              //   </RoleGuard>
+              // </ProtectedRoute>
             }
           />
 
@@ -204,21 +203,6 @@ export default function AppRoutes() {
                   <OnboardingGuard>
                     <Suspense fallback={<Loader />}>
                       <VerificationSuccessPage />
-                    </Suspense>
-                  </OnboardingGuard>
-                </RoleGuard>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/funds-redemption"
-            element={
-              <ProtectedRoute>
-                <RoleGuard allow={["investor"]}>
-                  <OnboardingGuard>
-                    <Suspense fallback={<Loader />}>
-                      <InvestorFundsRedemption />
                     </Suspense>
                   </OnboardingGuard>
                 </RoleGuard>
@@ -253,7 +237,20 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/dashboard/funds-redemption"
+            element={
+              <ProtectedRoute>
+                <RoleGuard allow={["investor"]}>
+                  <OnboardingGuard>
+                    <Suspense fallback={<Loader />}>
+                      <InvestorFundsRedemption />
+                    </Suspense>
+                  </OnboardingGuard>
+                </RoleGuard>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/profile"
             element={
