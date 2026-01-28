@@ -21,12 +21,14 @@ import { BioDataStep } from "../../../shared/components/steps/BioDataStep";
 import { NextOfKinStep } from "../../../shared/components/steps/NextOfKinStep";
 import { AccountDetailsStep } from "../../../shared/components/steps/AccountDetailsStep";
 import { KYCDocumentsStep } from "../../../shared/components/steps/KYCDocumentsStep";
+import { Spinner } from "@/components/ui/spinner";
 
 export function InvestorVerificationPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
   const { submitVerification } = useInvestor();
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [savedFormData, setSavedFormData] = useLocalStorage<
     Partial<FormValues>
@@ -64,12 +66,12 @@ export function InvestorVerificationPage() {
 
     const dataToRestore = omitKeys(
       savedFormData as Record<string, unknown>,
-      ["identificationDocument", "passportPhoto", "utilityBill"] as const
+      ["identificationDocument", "passportPhoto", "utilityBill"] as const,
     ) as Partial<FormValues>;
 
     const state = dataToRestore.stateOfResidence as string | undefined;
     const savedLga = dataToRestore.localGovernment as string | undefined;
-    const lgas = state ? stateAndLga[state] ?? [] : [];
+    const lgas = state ? (stateAndLga[state] ?? []) : [];
 
     if (state && savedLga && lgas.length > 0 && !lgas.includes(savedLga)) {
       dataToRestore.localGovernmentOther = savedLga;
@@ -90,8 +92,8 @@ export function InvestorVerificationPage() {
   const selectedLga = form.watch("localGovernment");
   const nigerianStates = useMemo(() => Object.keys(stateAndLga), []);
   const currentLGAs = useMemo(
-    () => (selectedState ? stateAndLga[selectedState] ?? [] : []),
-    [selectedState]
+    () => (selectedState ? (stateAndLga[selectedState] ?? []) : []),
+    [selectedState],
   );
 
   useEffect(() => {
@@ -136,11 +138,11 @@ export function InvestorVerificationPage() {
       if (firstError) {
         // Cast to FieldPath<FormValues> to avoid `any` and satisfy RHF typing
         form.setFocus(
-          firstError as unknown as import("react-hook-form").FieldPath<FormValues>
+          firstError as unknown as import("react-hook-form").FieldPath<FormValues>,
         );
       }
       toast.error(
-        "Please fill all required fields correctly before proceeding"
+        "Please fill all required fields correctly before proceeding",
       );
     }
   };
@@ -153,6 +155,7 @@ export function InvestorVerificationPage() {
   };
 
   const onSubmit = async (data: FormValues) => {
+    setLoading(true);
     try {
       await submitVerification(data);
       navigate("/verification-success");
@@ -160,8 +163,11 @@ export function InvestorVerificationPage() {
       form.reset();
       clearSavedProgress();
     } catch (error) {
+      setLoading(false);
       console.error("Verification submission error:", error);
       toast.error("Failed to submit verification data. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -201,8 +207,8 @@ export function InvestorVerificationPage() {
                             i < currentStep
                               ? "bg-brand-primary text-white shadow-md"
                               : i === currentStep
-                              ? "bg-brand-primary text-white ring-4 ring-brand-primary/20 shadow-md"
-                              : "bg-gray-200 text-gray-500"
+                                ? "bg-brand-primary text-white ring-4 ring-brand-primary/20 shadow-md"
+                                : "bg-gray-200 text-gray-500"
                           }`}
                         >
                           <Icon size={20} />
@@ -299,10 +305,11 @@ export function InvestorVerificationPage() {
                       </Button>
                     ) : (
                       <Button
+                        disabled={loading}
                         type="submit"
                         className="w-full sm:w-auto order-1 sm:order-2 sm:ml-auto bg-brand-primary hover:bg-brand-primary-dark focus:ring-2 focus:ring-brand-primary/50"
                       >
-                        Submit Verification{" "}
+                        {loading && <Spinner />} Submit Verification{" "}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     )}
