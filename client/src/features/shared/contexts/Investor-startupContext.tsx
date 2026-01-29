@@ -51,6 +51,19 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
   const [verStatus, setVerStatus] = useState<verStatus | null>(null);
   const [verificationSubmitted, setVerificationSubmitted] = useState(false);
 
+  const toFile = (value: unknown, label: string): File => {
+    if (value instanceof File) return value;
+
+    // handle accidental FileList storage
+    if (value && typeof value === "object" && "length" in value) {
+      const fileList = value as FileList;
+      const first = fileList[0];
+      if (first instanceof File) return first;
+    }
+
+    throw new Error(`${label} is required. Please upload a valid file.`);
+  };
+
   const submitVerification = useCallback(
     async (verificationData: FormValues | StartupFormValues) => {
       const {
@@ -65,34 +78,37 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
         return response.data;
       };
 
-      const submitDocs = async (
-        identificationDocument: File,
-        passportPhoto: File,
-        utilityBill: File,
-      ) => {
+      const submitDocs = async (docs: {
+        identificationDocument: File;
+        passportPhoto: File;
+        utilityBill: File;
+      }) => {
         const formData = new FormData();
-        formData.append("identificationDocument", identificationDocument);
-        formData.append("passportPhoto", passportPhoto);
-        formData.append("utilityBill", utilityBill);
+        formData.append("identificationDocument", docs.identificationDocument);
+        formData.append("passportPhoto", docs.passportPhoto);
+        formData.append("utilityBill", docs.utilityBill);
 
-        const response = await api.post(`/verification/documents`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        // IMPORTANT: do not set Content-Type manually (boundary matters)
+        const response = await api.post(`/verification/documents`, formData);
         return response.data;
       };
 
       try {
         setLoading(true);
         await submitTextfields(textFields);
-        await submitDocs(
-          identificationDocument as File,
-          passportPhoto as File,
-          utilityBill as File,
-        );
+
+        await submitDocs({
+          identificationDocument: toFile(
+            identificationDocument,
+            "Identification document",
+          ),
+          passportPhoto: toFile(passportPhoto, "Passport photo"),
+          utilityBill: toFile(utilityBill, "Utility bill"),
+        });
+
         setVerificationSubmitted(true);
       } catch (error) {
         const message = getApiErrorMessage(error);
-        console.log(error);
         throw new Error(message || "Failed to submit verification data");
       } finally {
         setLoading(false);
@@ -118,7 +134,7 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
   const submitCorporateVerification = useCallback(
     async (data: CorporateVerificationForm) => {
       const { company, bankDetails, documents, signatories, referral } = data;
-      console.log(data);
+
       const textPayload = {
         company: { ...company, logo: undefined },
         bankDetails,
@@ -133,7 +149,7 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
         ),
         referral,
       };
-      console.log(`Text Payload: ${textPayload}`);
+
       const submitText = async () => {
         const res = await api.post(`/verification/corporate`, textPayload);
         return res.data;
@@ -141,27 +157,51 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
 
       const submitDocs = async () => {
         const fd = new FormData();
-        if (company.logo instanceof File)
-          fd.append("companyLogo", company.logo);
+
+        if (company.logo)
+          fd.append("companyLogo", toFile(company.logo, "Company logo"));
 
         fd.append(
           "certificateOfIncorporation",
-          documents.certificateOfIncorporation,
+          toFile(
+            documents.certificateOfIncorporation,
+            "Certificate of Incorporation",
+          ),
         );
-        if (documents.memorandumAndArticles)
-          fd.append("memorandumAndArticles", documents.memorandumAndArticles);
-        fd.append("utilityBill", documents.utilityBill);
-        if (documents.tinCertificate)
-          fd.append("tinCertificate", documents.tinCertificate);
+        fd.append("utilityBill", toFile(documents.utilityBill, "Utility bill"));
+
+        if (documents.memorandumAndArticles) {
+          fd.append(
+            "memorandumAndArticles",
+            toFile(documents.memorandumAndArticles, "Memorandum and Articles"),
+          );
+        }
+        if (documents.tinCertificate) {
+          fd.append(
+            "tinCertificate",
+            toFile(documents.tinCertificate, "TIN certificate"),
+          );
+        }
 
         signatories.forEach((s, i) => {
-          if (s.idDocument instanceof File)
-            fd.append(`signatories[${i}][idDocument]`, s.idDocument);
+          if (s.idDocument) {
+            fd.append(
+              `signatories[${i}][idDocument]`,
+              toFile(s.idDocument, `Signatory ${i + 1} ID document`),
+            );
+          }
+          // API supports signature too; append if your form collects it
+          const signatory = s as typeof s & { signature?: File };
+          if (signatory.signature) {
+            fd.append(
+              `signatories[${i}][signature]`,
+              toFile(signatory.signature, `Signatory ${i + 1} signature`),
+            );
+          }
         });
-        console.log(`Form Data: ${fd}`);
-        const res = await api.post(`/verification/corporate/documents`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+
+        // IMPORTANT: do not set Content-Type manually
+        const res = await api.post(`/verification/corporate/documents`, fd);
         return res.data;
       };
 
