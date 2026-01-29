@@ -183,15 +183,15 @@ export default function AppRoutes() {
           <Route
             path="/investor-verification"
             element={
-              // <ProtectedRoute>
-              //   <RoleGuard allow={["investor"]}>
-              //     <OnboardingGuard>
-              <Suspense fallback={<Loader />}>
-                <InvestorVerificationPage />
-              </Suspense>
-              //     </OnboardingGuard>
-              //   </RoleGuard>
-              // </ProtectedRoute>
+              <ProtectedRoute>
+                <RoleGuard allow={["investor"]}>
+                  <OnboardingGuard>
+                    <Suspense fallback={<Loader />}>
+                      <InvestorVerificationPage />
+                    </Suspense>
+                  </OnboardingGuard>
+                </RoleGuard>
+              </ProtectedRoute>
             }
           />
 
@@ -252,7 +252,7 @@ export default function AppRoutes() {
             }
           />
           <Route
-            path="/profile"
+            path="/dashboard/profile"
             element={
               <ProtectedRoute>
                 <RoleGuard allow={["investor", "startup", "admin"]}>

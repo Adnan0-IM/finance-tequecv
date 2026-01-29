@@ -5,13 +5,11 @@ import { useSwipeable } from "react-swipeable";
 import {
   User,
   Home,
-  BarChart3,
   Settings,
   Menu,
   X,
   LogOut,
   Bell,
-  Wallet,
   User2,
   RectangleHorizontal,
   Verified,
@@ -82,16 +80,13 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
 
   const navLinksInvestor = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
-    { title: "Investments", path: "/dashboard/investments", icon: BarChart3 },
     {title : "Funds Redemption", path: "/dashboard/funds-redemption", icon: Banknote },
-    { title: "Transactions", path: "/dashboard/transactions", icon: Wallet },
-    { title: "Settings", path: "/dashboard/settings", icon: Settings },
+    { title: "Profile", path: "/dashboard/profile", icon: User },
   ];
 
   const navLinksFundRaiser = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
-    { title: "Applications", path: "/dashboard/applications", icon: BarChart3 },
-    { title: "Settings", path: "/dashboard/settings", icon: Settings },
+    {title: "Profile", path: "/dashboard/profile", icon: User },
   ];
 
   // Prefer path-based disabling (more robust than title comparisons)
@@ -178,7 +173,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                         : ""
                     }
                     ${
-                      isActive
+                      isActive && location.pathname === item.path
                         ? "bg-primary text-white"
                         : "text-gray-700 hover:bg-brand-light"
                     }`
@@ -253,7 +248,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                   <div className="flex flex-col">
                     <button
                       onClick={() => {
-                        navigate("/profile");
+                        navigate("/dashboard/profile");
                         setIsMobileMenuOpen(false);
                       }}
                       className="font-medium text-lg text-left truncate max-w-[170px] hover:text-primary transition-colors"
