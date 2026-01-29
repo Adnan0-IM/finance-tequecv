@@ -49,6 +49,20 @@ const getTodayISODate = (): string => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+const normalizeAccountType = (
+  value: unknown,
+): RedemptionFormValues["accountType"] => {
+  if (typeof value !== "string") return "";
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) return "";
+  if (normalized.startsWith("sav")) return "savings";
+  if (normalized.startsWith("cur")) return "current";
+  if (normalized.startsWith("dom")) return "domiciliary";
+
+  return "";
+};
+
 export default function RedemptionForm() {
   const { submitRedemptionRequest, getRedemptionBankDetails } = useInvestor();
   const didPrefillRef = useRef(false);
@@ -116,7 +130,7 @@ export default function RedemptionForm() {
           !current.accountType &&
           bank.accountType
         ) {
-          patch.accountType = bank.accountType;
+          patch.accountType = normalizeAccountType(bank.accountType);
         }
 
         if (Object.keys(patch).length > 0) {

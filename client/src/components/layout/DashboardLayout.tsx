@@ -5,7 +5,6 @@ import { useSwipeable } from "react-swipeable";
 import {
   User,
   Home,
-  Settings,
   Menu,
   X,
   LogOut,
@@ -408,23 +407,12 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/dashboard/profile")}
                     className="cursor-pointer"
                   >
                     <User className="mr-2 size-5 hover:text-white" />
                     <span className="text-base">Profile</span>
                   </DropdownMenuItem>
-                  {location.pathname === "/dashboard" &&
-                    user?.role !== "admin" && (
-                      <DropdownMenuItem
-                        onClick={() => navigate("/dashboard/settings")}
-                        className="cursor-pointer"
-                      >
-                        <Settings className="mr-2 size-5 hover:text-white" />
-                        <span className="text-base">Settings</span>
-                      </DropdownMenuItem>
-                    )}
-
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
