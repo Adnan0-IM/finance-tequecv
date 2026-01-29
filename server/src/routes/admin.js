@@ -9,6 +9,7 @@ const {
   userVerificationStatus,
   createSubAdmin,
   sendNewsletter,
+  getRedemptions,
 } = require("../controllers/admin");
 
 const router = express.Router();
@@ -545,4 +546,121 @@ router.delete("/users/:id", deleteUser);
  */
 router.post("/create-sub-admin", createSubAdmin);
 
+/**
+ * @openapi
+ * /api/admin/redemptions:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get redemption requests
+ *     description: |
+ *       Returns redemption requests submitted by users.
+ *       Supports pagination and basic filtering.
+ *     security:
+ *       - bearerAuth: []
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Page size (max 100)
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: Filter by user ObjectId
+ *       - in: query
+ *         name: fundType
+ *         schema:
+ *           type: string
+ *           enum: [ethical, equity, debt]
+ *         description: Filter by fund type
+ *       - in: query
+ *         name: redemptionType
+ *         schema:
+ *           type: string
+ *           enum: [partial, full]
+ *         description: Filter by redemption type
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search across investmentId, email, and fullName
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id: { type: string }
+ *                       userId:
+ *                         oneOf:
+ *                           - type: string
+ *                           - type: object
+ *                             properties:
+ *                               _id: { type: string }
+ *                               name: { type: string }
+ *                               email: { type: string, format: email }
+ *                               phone: { type: string }
+ *                               role: { type: string }
+ *                       investmentId: { type: string }
+ *                       date:
+ *                         type: string
+ *                         description: Submission date (YYYY-MM-DD)
+ *                       fundType:
+ *                         type: string
+ *                         enum: [ethical, equity, debt]
+ *                       amountFigures: { type: string }
+ *                       amountWords: { type: string }
+ *                       redemptionType:
+ *                         type: string
+ *                         enum: [partial, full]
+ *                       fullName: { type: string }
+ *                       address: { type: string }
+ *                       city: { type: string }
+ *                       lga: { type: string }
+ *                       state: { type: string }
+ *                       phone: { type: string }
+ *                       email: { type: string, format: email }
+ *                       bankName: { type: string, nullable: true }
+ *                       accountName: { type: string, nullable: true }
+ *                       accountNumber: { type: string, nullable: true }
+ *                       accountType: { type: string, nullable: true }
+ *                       createdAt: { type: string, format: date-time }
+ *                       updatedAt: { type: string, format: date-time }
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page: { type: integer, example: 1 }
+ *                     limit: { type: integer, example: 20 }
+ *                     total: { type: integer, example: 133 }
+ *                     pages: { type: integer, example: 7 }
+ *       400:
+ *         description: Bad Request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.get("/redemptions", getRedemptions);
 module.exports = router;

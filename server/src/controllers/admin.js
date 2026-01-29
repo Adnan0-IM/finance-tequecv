@@ -484,3 +484,62 @@ exports.createSubAdmin = async (req, res) => {
     });
   }
 };
+
+exports.getRedemptions = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit || "20", 10), 1),
+      100,
+    );
+
+    const filter = {};
+    const RedemptionRequest = require("../models/RedemptionRequest");
+
+    if (req.query.userId) {
+      const userId = String(req.query.userId);
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid userId" });
+      }
+      filter.userId = new mongoose.Types.ObjectId(userId);
+    }
+
+    if (req.query.fundType) {
+      filter.fundType = String(req.query.fundType);
+    }
+
+    if (req.query.redemptionType) {
+      filter.redemptionType = String(req.query.redemptionType);
+    }
+
+    if (req.query.q) {
+      const rx = new RegExp(String(req.query.q).trim(), "i");
+      filter.$or = [{ investmentId: rx }, { email: rx }, { fullName: rx }];
+    }
+
+    const [items, total] = await Promise.all([
+      RedemptionRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate({ path: "userId", select: "name email phone role" })
+        .lean(),
+      RedemptionRequest.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: items,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while getting redemptions",
+      error: error.message,
+    });
+  }
+};
