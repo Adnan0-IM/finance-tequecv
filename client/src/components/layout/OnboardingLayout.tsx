@@ -97,19 +97,12 @@ export default function OnboardingLayout({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate("/dashboard/profile")}
                 className="cursor-pointer"
               >
                 <User className="mr-2 size-5" />
                 <span className="text-base">Profile</span>
               </DropdownMenuItem>
-              {/* <DropdownMenuItem
-                onClick={() => navigate("/dashboard/settings")}
-                className="cursor-pointer"
-              >
-                <Settings className="mr-2 size-5" />
-                <span className="text-base">Settings</span>
-              </DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}

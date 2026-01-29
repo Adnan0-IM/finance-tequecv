@@ -64,6 +64,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
       icon: RectangleHorizontal,
     },
     { title: "Manage SubAdmins", path: "/admin/sub-admins", icon: User },
+    { title: "Profile", path: "/dashboard/profile", icon: User },
   ];
 
   const navLinksSubAdmin = [
@@ -75,6 +76,7 @@ const DashboardNavigation = ({ children }: { children: ReactNode }) => {
       path: "/admin/carousel",
       icon: RectangleHorizontal,
     },
+    { title: "Profile", path: "/dashboard/profile", icon: User },
   ];
 
   const navLinksInvestor = [
