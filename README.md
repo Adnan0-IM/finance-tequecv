@@ -12,7 +12,7 @@ Full-stack web app for managing investors and startups, onboarding and verificat
 
 - Public marketing pages (home, about, contact, investment plans, team)
 - User registration, login, email verification, and password reset
-- Investor/startup onboarding and verification (documents, status review)
+- Investor/start useUsersup onboarding and verification (documents, status review)
 - Admin dashboard for users, verifications, sub-admins, redemptions, and newsletters
 - Carousel and media uploads
 - Newsletter subscription and batch email sends (Termii templates)
