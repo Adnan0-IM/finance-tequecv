@@ -93,7 +93,7 @@ import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const ManageSubAdmin = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const isUpdatingFromState = useRef(false);
+  const syncingFromUrl = useRef(false);
   
   // State for search and filtering
   const [search, setSearch] = useState("");
@@ -189,40 +189,41 @@ const ManageSubAdmin = () => {
     setPage(1);
   }, [search, limit]);
 
-  // Sync state to URL
+  // Sync URL to state (for browser back/forward navigation)
   useEffect(() => {
-    const urlPage = searchParams.get("page");
-    const urlLimit = searchParams.get("limit");
-    
-    if (urlPage === String(page) && urlLimit === String(limit)) {
-      return;
-    }
-    
-    isUpdatingFromState.current = true;
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", String(page));
-    nextParams.set("limit", String(limit));
-    setSearchParams(nextParams, { replace: true });
-    
-    // Reset flag after a short delay to allow URL to update
-    setTimeout(() => {
-      isUpdatingFromState.current = false;
-    }, 0);
-  }, [page, limit, searchParams, setSearchParams]);
-
-  // Sync URL to state (for browser back/forward)
-  useEffect(() => {
-    // Don't sync if we just updated the URL from state
-    if (isUpdatingFromState.current) return;
-    
     const urlPage = parseInt(searchParams.get("page") || "1", 10);
     const urlLimit = parseInt(searchParams.get("limit") || "20", 10);
     const nextPage = Number.isNaN(urlPage) ? 1 : Math.max(1, urlPage);
     const nextLimit = Number.isNaN(urlLimit) || urlLimit <= 0 ? 20 : urlLimit;
 
-    if (nextPage !== page) setPage(nextPage);
-    if (nextLimit !== limit) setLimit(nextLimit);
+    // Only update state if URL differs and we're not already syncing
+    if ((nextPage !== page || nextLimit !== limit) && !syncingFromUrl.current) {
+      syncingFromUrl.current = true;
+      if (nextPage !== page) setPage(nextPage);
+      if (nextLimit !== limit) setLimit(nextLimit);
+      // Reset flag after state updates are applied
+      queueMicrotask(() => {
+        syncingFromUrl.current = false;
+      });
+    }
   }, [searchParams]);
+
+  // Sync state to URL (for user interactions)
+  useEffect(() => {
+    // Skip if we're syncing from URL to avoid circular updates
+    if (syncingFromUrl.current) return;
+    
+    const urlPage = searchParams.get("page");
+    const urlLimit = searchParams.get("limit");
+    
+    // Only update URL if it differs from current state
+    if (urlPage !== String(page) || urlLimit !== String(limit)) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("page", String(page));
+      nextParams.set("limit", String(limit));
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [page, limit, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (page > totalPages && totalPages > 0) {
