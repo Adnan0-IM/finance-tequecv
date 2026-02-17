@@ -69,9 +69,17 @@ exports.getUsers = async (req, res) => {
       ];
     }
 
+    // Add a hard limit to prevent memory issues while allowing client-side pagination
+    const MAX_LIMIT = 10000;
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = !isNaN(requestedLimit) && requestedLimit > 0 
+      ? Math.min(requestedLimit, MAX_LIMIT) 
+      : MAX_LIMIT;
+
     const items = await User.find(filter)
       .sort({ createdAt: -1 })
       .select("-password")
+      .limit(limit)
       .lean();
 
     res.json({

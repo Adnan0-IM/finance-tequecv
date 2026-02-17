@@ -48,81 +48,49 @@ const Verification = () => {
     return () => clearTimeout(id);
   }, [search]);
 
-  // Build query options
-  const options = useMemo(() => {
-    // Create the base options object
+  // Build query options for fetching all submitted users (for stats)
+  const allSubmittedOptions = useMemo(() => {
     const opts: optionsType = {
-      excludeAdmin: true, // Always exclude admin users
-      onlySubmitted: true, // Always show only submitted verification docs
+      excludeAdmin: true,
+      onlySubmitted: true,
     };
-
-    // Only add status to query if it's defined
-    if (status) {
-      opts.status = status;
-    }
-
     // Add search query if defined
     if (q) {
       opts.q = q;
     }
-
     // Add role filter if not "all"
     if (role !== "all") {
       opts.role = role as "investor" | "startup" | "admin";
     }
-
     return opts;
-  }, [status, q, role]);
+  }, [q, role]);
 
-  // Data + actions
-  const { data, isPending, isFetching, isError, error } = useUsers(options);
+  // Fetch all submitted users once for stats calculation
+  const { data: allData, isPending, isFetching, isError, error } = useUsers(allSubmittedOptions);
   const { mutate: verifyUser, isPending: verifying } = useVerifyUser();
 
-  // Users come pre-filtered from the API now
-  const filteredSubmittedVerificationUsers = data?.users ?? [];
+  // Calculate stats client-side from all submitted users
+  const allSubmittedUsers = allData?.users ?? [];
+  
+  const stats = useMemo(() => {
+    const total = allSubmittedUsers.length;
+    const pending = allSubmittedUsers.filter(u => u.verification?.status === "pending").length;
+    const approved = allSubmittedUsers.filter(u => u.verification?.status === "approved").length;
+    const rejected = allSubmittedUsers.filter(u => u.verification?.status === "rejected").length;
+    return { total, pending, approved, rejected };
+  }, [allSubmittedUsers]);
+
+  // Filter by selected status
+  const filteredSubmittedVerificationUsers = useMemo(() => {
+    if (!status) return allSubmittedUsers;
+    return allSubmittedUsers.filter(u => u.verification?.status === status);
+  }, [allSubmittedUsers, status]);
+
   const totalUsers = filteredSubmittedVerificationUsers.length;
   const pagedUsers = useMemo(() => {
     const start = (page - 1) * limit;
     return filteredSubmittedVerificationUsers.slice(start, start + limit);
   }, [filteredSubmittedVerificationUsers, page, limit]);
-
-  // Fetch all users with different statuses to populate the stats
-  const allStatusOptions = useMemo(
-    () => ({
-      ...options,
-      status: undefined,
-    }),
-    [options],
-  );
-
-  const pendingOptions = useMemo(
-    () => ({
-      ...options,
-      status: "pending" as const,
-    }),
-    [options],
-  );
-
-  const approvedOptions = useMemo(
-    () => ({
-      ...options,
-      status: "approved" as const,
-    }),
-    [options],
-  );
-
-  const rejectedOptions = useMemo(
-    () => ({
-      ...options,
-      status: "rejected" as const,
-    }),
-    [options],
-  );
-
-  const { data: allUsersData } = useUsers(allStatusOptions);
-  const { data: pendingUsersData } = useUsers(pendingOptions);
-  const { data: approvedUsersData } = useUsers(approvedOptions);
-  const { data: rejectedUsersData } = useUsers(rejectedOptions);
 
   // Handlers
   const onApprove = useCallback(
@@ -157,7 +125,7 @@ const Verification = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [status, q, role, limit]);
+  }, [status, search, role, limit]);
 
   return (
     <DashboardNavigation>
@@ -170,28 +138,28 @@ const Verification = () => {
             <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs text-brand-accent">Total</div>
               <div className="text-base text-brand-accent font-semibold">
-                {allUsersData?.users?.length || 0}
+                {stats.total}
               </div>
             </div>
 
             <div className="bg-yellow-100 text-yellow-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Pending</div>
               <div className="text-base font-semibold">
-                {pendingUsersData?.users?.length || 0}
+                {stats.pending}
               </div>
             </div>
 
             <div className="bg-green-100 text-green-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Approved</div>
               <div className="text-base font-semibold">
-                {approvedUsersData?.users?.length || 0}
+                {stats.approved}
               </div>
             </div>
 
             <div className="bg-red-100 text-red-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Rejected</div>
               <div className="text-base font-semibold">
-                {rejectedUsersData?.users?.length || 0}
+                {stats.rejected}
               </div>
             </div>
           </div>

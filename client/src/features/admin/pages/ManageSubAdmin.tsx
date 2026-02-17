@@ -198,20 +198,10 @@ const ManageSubAdmin = () => {
       return;
     }
     setSearchParams(nextParams, { replace: true });
-  }, [page, limit, searchParams, setSearchParams]);
+  }, [page, limit, setSearchParams]);
 
   useEffect(() => {
-    const urlPage = parseInt(searchParams.get("page") || "1", 10);
-    const urlLimit = parseInt(searchParams.get("limit") || "20", 10);
-    const nextPage = Number.isNaN(urlPage) ? 1 : Math.max(1, urlPage);
-    const nextLimit = Number.isNaN(urlLimit) || urlLimit <= 0 ? 20 : urlLimit;
-
-    if (nextPage !== page) setPage(nextPage);
-    if (nextLimit !== limit) setLimit(nextLimit);
-  }, [searchParams, page, limit]);
-
-  useEffect(() => {
-    if (page > totalPages) {
+    if (page > totalPages && totalPages > 0) {
       setPage(totalPages);
     }
   }, [page, totalPages]);
