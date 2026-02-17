@@ -206,7 +206,7 @@ const ManageSubAdmin = () => {
         syncingFromUrl.current = false;
       });
     }
-  }, [searchParams]);
+  }, [searchParams, page, limit]);
 
   // Sync state to URL (for user interactions)
   useEffect(() => {
