@@ -226,7 +226,11 @@ const ManageSubAdmin = () => {
   }, [page, limit, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (page > totalPages && totalPages > 0) {
+    if (totalPages === 0) {
+      // Reset to page 1 when there are no pages
+      if (page !== 1) setPage(1);
+    } else if (page > totalPages) {
+      // Adjust to last page if current page exceeds total pages
       setPage(totalPages);
     }
   }, [page, totalPages]);
