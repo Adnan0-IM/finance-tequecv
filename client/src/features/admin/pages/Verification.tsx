@@ -73,11 +73,17 @@ const Verification = () => {
   const allSubmittedUsers = allData?.users ?? [];
   
   const stats = useMemo(() => {
-    const total = allSubmittedUsers.length;
-    const pending = allSubmittedUsers.filter(u => u.verification?.status === "pending").length;
-    const approved = allSubmittedUsers.filter(u => u.verification?.status === "approved").length;
-    const rejected = allSubmittedUsers.filter(u => u.verification?.status === "rejected").length;
-    return { total, pending, approved, rejected };
+    return allSubmittedUsers.reduce(
+      (acc, u) => {
+        const status = u.verification?.status;
+        acc.total++;
+        if (status === "pending") acc.pending++;
+        else if (status === "approved") acc.approved++;
+        else if (status === "rejected") acc.rejected++;
+        return acc;
+      },
+      { total: 0, pending: 0, approved: 0, rejected: 0 }
+    );
   }, [allSubmittedUsers]);
 
   // Filter by selected status
