@@ -33,11 +33,6 @@ exports.getUsers = async (req, res) => {
   try {
     console.log("Raw query params:", req.query);
 
-    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
-    const limit = Math.min(
-      Math.max(parseInt(req.query.limit || "20", 10), 1),
-      100,
-    );
     const status = (req.query.status || "").trim();
     const q = (req.query.q || "").trim();
     const role = (req.query.role || "").trim();
@@ -74,20 +69,14 @@ exports.getUsers = async (req, res) => {
       ];
     }
 
-    const [items, total] = await Promise.all([
-      User.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .select("-password")
-        .lean(),
-      User.countDocuments(filter),
-    ]);
+    const items = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .select("-password")
+      .lean();
 
     res.json({
       success: true,
       data: items.map((u) => mapUserForAdmin(req, u)),
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error(error);

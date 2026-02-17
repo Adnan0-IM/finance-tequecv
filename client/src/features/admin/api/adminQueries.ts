@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 import type {
   optionsType,
-  paginationType,
   userRolePropType,
   verifyUserPropTypes,
   verificationStatustypes,
@@ -20,16 +19,12 @@ export const adminKeys = {
   verification: (userId: string) => ["admin", "verification", userId] as const,
 };
 
-type UsersResult = { users: User[]; pagination: paginationType };
+type UsersResult = { users: User[] };
 
 const fetchUsers = async (options: optionsType): Promise<UsersResult> => {
-  const page = options.page ?? 1;
-  const limit = options.limit ?? 20;
   const { status, q, role, excludeAdmin, onlySubmitted } = options;
 
   const params = new URLSearchParams();
-  params.set("page", String(page));
-  params.set("limit", String(limit));
   if (status) params.set("status", status);
   if (q && q.trim()) params.set("q", q.trim());
   if (role) params.set("role", role);
@@ -40,7 +35,6 @@ const fetchUsers = async (options: optionsType): Promise<UsersResult> => {
     const res = await api.get(`/admin/users?${params.toString()}`);
     return {
       users: res.data.data as User[],
-      pagination: res.data.pagination as paginationType,
     };
   } catch (error) {
     const message = getApiErrorMessage(error);
@@ -85,7 +79,7 @@ const verifyUserApi = async ({ userId, statusObject }: verifyUserPropTypes) => {
   try {
     const response = await api.post(
       `/admin/users/${userId}/verification-status`,
-      statusObject
+      statusObject,
     );
     return response.data.data;
   } catch (error) {
@@ -95,11 +89,11 @@ const verifyUserApi = async ({ userId, statusObject }: verifyUserPropTypes) => {
 };
 
 const getVerStatusApi = async (
-  userId: string
+  userId: string,
 ): Promise<verificationStatustypes> => {
   try {
     const response = await api.get(
-      `/admin/users/${userId}/verification-status`
+      `/admin/users/${userId}/verification-status`,
     );
     return response.data.data as verificationStatustypes;
   } catch (error) {
@@ -190,7 +184,7 @@ export const useSetUserRole = () => {
     onSuccess: (updated, { userId }) => {
       // Update the user detail cache
       qc.setQueryData<User>(adminKeys.user(userId), (prev) =>
-        prev ? { ...prev, role: updated.role } : updated
+        prev ? { ...prev, role: updated.role } : updated,
       );
       // Refresh lists to reflect changes
       qc.invalidateQueries({ queryKey: ["admin", "users"] });

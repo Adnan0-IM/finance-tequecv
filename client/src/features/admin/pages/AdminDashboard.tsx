@@ -38,16 +38,13 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
 
   // Fetch all users for dashboard stats
-  const { data, isPending, isError } = useUsers({
-    page: 1,
-    limit: 100, // Get more users for better stats
-  });
+  const { data, isPending, isError } = useUsers({});
 
   // Memoize users array to prevent unnecessary recalculations
   const users = useMemo(() => data?.users || [], [data?.users]);
   const usersWithoutAdmins = useMemo(
     () => users.filter((u) => u.role !== "admin"),
-    [users]
+    [users],
   );
 
   // Calculate stats
@@ -55,15 +52,15 @@ const AdminDashboard = () => {
     const totalUsers = users.length;
     const adminUsers = users.filter((u) => u.role === "admin").length;
     const totalUsersWithoutAdmins = users.filter(
-      (u) => u.role !== "admin"
+      (u) => u.role !== "admin",
     ).length;
     const startupUsers = users.filter((u) => u.role === "startup").length;
     const investorUsers = users.filter((u) => u.role === "investor").length;
     const verifiedUsers = usersWithoutAdmins.filter(
-      (u) => u.verification?.status === "approved"
+      (u) => u.verification?.status === "approved",
     ).length;
     const pendingVerification = usersWithoutAdmins.filter(
-      (u) => u.verification?.status === "pending"
+      (u) => u.verification?.status === "pending",
     ).length;
 
     return {
@@ -84,7 +81,7 @@ const AdminDashboard = () => {
       .sort(
         (a, b) =>
           new Date(b.createdAt || 0).getTime() -
-          new Date(a.createdAt || 0).getTime()
+          new Date(a.createdAt || 0).getTime(),
       )
       .slice(0, 5);
   }, [users]);
@@ -108,7 +105,7 @@ const AdminDashboard = () => {
       (user) =>
         user.name?.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower) ||
-        user.phone?.toLowerCase().includes(searchLower)
+        user.phone?.toLowerCase().includes(searchLower),
     );
   }, [recentUsers, search]);
 
@@ -405,8 +402,8 @@ const AdminDashboard = () => {
                                     status === "approved"
                                       ? "default"
                                       : status === "rejected"
-                                      ? "destructive"
-                                      : "secondary"
+                                        ? "destructive"
+                                        : "secondary"
                                   }
                                 >
                                   {user.role === "admin" ? "Admin" : status}
@@ -420,7 +417,7 @@ const AdminDashboard = () => {
                                     className="border"
                                     onClick={() =>
                                       navigate(
-                                        `/admin/verification/${user._id}`
+                                        `/admin/verification/${user._id}`,
                                       )
                                     }
                                   >
@@ -507,7 +504,7 @@ const AdminDashboard = () => {
                   <TrendingUp className="h-4 w-4 text-brand-primary" />
                   <div className="text-2xl font-bold text-brand-primary">
                     {Math.round(
-                      (stats.verifiedUsers / stats.totalUsers) * 100
+                      (stats.verifiedUsers / stats.totalUsers) * 100,
                     ) || 0}
                     %
                   </div>

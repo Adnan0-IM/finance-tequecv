@@ -1,4 +1,3 @@
-import type { paginationType } from "@/types/admin";
 import type { SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,11 +11,10 @@ import {
 type PaginationProps = {
   limit: number;
   setLimit: React.Dispatch<SetStateAction<number>> | ((limit: number) => void);
-  pagination: paginationType | undefined;
   page: number;
   setPage: React.Dispatch<SetStateAction<number>> | ((page: number) => void);
   isFetching: boolean;
-  totalUsers?: number;
+  totalUsers: number;
   showingUsers?: number;
 };
 
@@ -25,12 +23,11 @@ const Pagination = ({
   setLimit,
   page,
   setPage,
-  pagination,
   isFetching,
   totalUsers,
   showingUsers,
 }: PaginationProps) => {
-  const totalPages = Math.max(1, pagination?.pages || 1);
+  const totalPages = Math.max(1, Math.ceil(totalUsers / limit));
   const currentPage = Math.min(Math.max(1, page || 1), totalPages);
 
   const getVisiblePages = (current: number, total: number, max = 5) => {
@@ -61,14 +58,14 @@ const Pagination = ({
           </SelectContent>
         </Select>
       </div>
-      {totalUsers !== undefined && showingUsers !== undefined && (
+      {showingUsers !== undefined && (
         <div className="text-sm hidden sm:block text-muted-foreground">
           Showing {showingUsers > 0 ? showingUsers : 0} of {totalUsers} users
         </div>
       )}
       <div className="flex items-center gap-3">
         <div className="text-sm hidden sm:block text-muted-foreground">
-          {pagination ? `Page ${currentPage} of ${totalPages}` : null}
+          Page {currentPage} of {totalPages}
         </div>
         <Button
           variant="outline"
@@ -91,7 +88,7 @@ const Pagination = ({
         </div>
         <Button
           variant="outline"
-          disabled={!pagination || currentPage >= totalPages || isFetching}
+          disabled={currentPage >= totalPages || isFetching}
           onClick={() => setPage(currentPage + 1)}
         >
           Next

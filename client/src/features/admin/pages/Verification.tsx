@@ -14,12 +14,12 @@ import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
 import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const Verification = () => {
-  // Filters and pagination
+  // Filters
   const [status, setStatus] = useState<optionsType["status"]>("pending");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   // Use the RoleFilter type imported from Toolbar component
   const [role, setRole] = useState<RoleFilter>("investor");
 
@@ -44,7 +44,6 @@ const Verification = () => {
     const id = setTimeout(() => {
       const val = search.trim();
       setQ(val.length ? val : undefined);
-      setPage(1);
     }, 400);
     return () => clearTimeout(id);
   }, [search]);
@@ -53,8 +52,6 @@ const Verification = () => {
   const options = useMemo(() => {
     // Create the base options object
     const opts: optionsType = {
-      page,
-      limit,
       excludeAdmin: true, // Always exclude admin users
       onlySubmitted: true, // Always show only submitted verification docs
     };
@@ -75,7 +72,7 @@ const Verification = () => {
     }
 
     return opts;
-  }, [page, limit, status, q, role]);
+  }, [status, q, role]);
 
   // Data + actions
   const { data, isPending, isFetching, isError, error } = useUsers(options);
@@ -83,47 +80,43 @@ const Verification = () => {
 
   // Users come pre-filtered from the API now
   const filteredSubmittedVerificationUsers = data?.users ?? [];
-  const pagination = data?.pagination;
+  const totalUsers = filteredSubmittedVerificationUsers.length;
+  const pagedUsers = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredSubmittedVerificationUsers.slice(start, start + limit);
+  }, [filteredSubmittedVerificationUsers, page, limit]);
 
   // Fetch all users with different statuses to populate the stats
   const allStatusOptions = useMemo(
     () => ({
       ...options,
       status: undefined,
-      page: 1,
-      limit: 1, // We only need the count, not the actual users
     }),
-    [options]
+    [options],
   );
 
   const pendingOptions = useMemo(
     () => ({
       ...options,
       status: "pending" as const,
-      page: 1,
-      limit: 1,
     }),
-    [options]
+    [options],
   );
 
   const approvedOptions = useMemo(
     () => ({
       ...options,
       status: "approved" as const,
-      page: 1,
-      limit: 1,
     }),
-    [options]
+    [options],
   );
 
   const rejectedOptions = useMemo(
     () => ({
       ...options,
       status: "rejected" as const,
-      page: 1,
-      limit: 1,
     }),
-    [options]
+    [options],
   );
 
   const { data: allUsersData } = useUsers(allStatusOptions);
@@ -136,7 +129,7 @@ const Verification = () => {
     (userId: string) => {
       verifyUser({ userId, statusObject: { status: "approved" } });
     },
-    [verifyUser]
+    [verifyUser],
   );
 
   const onReject = useCallback((userId: string) => {
@@ -154,18 +147,17 @@ const Verification = () => {
       setRejectOpen(false);
       setRejectUserId(null);
     },
-    [rejectUserId, verifyUser]
+    [rejectUserId, verifyUser],
   );
 
   const onViewDetails = useCallback(
     (userId: string) => navigate(`/admin/verification/${userId}`),
-    [navigate]
+    [navigate],
   );
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [status, limit, role]);
+  }, [status, q, role, limit]);
 
   return (
     <DashboardNavigation>
@@ -178,28 +170,28 @@ const Verification = () => {
             <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs text-brand-accent">Total</div>
               <div className="text-base text-brand-accent font-semibold">
-                {allUsersData?.pagination?.total || 0}
+                {allUsersData?.users?.length || 0}
               </div>
             </div>
 
             <div className="bg-yellow-100 text-yellow-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Pending</div>
               <div className="text-base font-semibold">
-                {pendingUsersData?.pagination?.total || 0}
+                {pendingUsersData?.users?.length || 0}
               </div>
             </div>
 
             <div className="bg-green-100 text-green-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Approved</div>
               <div className="text-base font-semibold">
-                {approvedUsersData?.pagination?.total || 0}
+                {approvedUsersData?.users?.length || 0}
               </div>
             </div>
 
             <div className="bg-red-100 text-red-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Rejected</div>
               <div className="text-base font-semibold">
-                {rejectedUsersData?.pagination?.total || 0}
+                {rejectedUsersData?.users?.length || 0}
               </div>
             </div>
           </div>
@@ -217,7 +209,7 @@ const Verification = () => {
 
         {/* Table */}
         <VerificationTable
-          users={filteredSubmittedVerificationUsers}
+          users={pagedUsers}
           error={error as Error | null}
           isError={isError}
           isFetching={isFetching}
@@ -228,19 +220,17 @@ const Verification = () => {
           onViewDetails={onViewDetails}
         />
 
-        {/* Pagination */}
-        {pagination?.pages && pagination.pages > 0 ? (
+        {totalUsers > 0 && (
           <Pagination
             isFetching={isFetching}
             limit={limit}
             page={page}
-            pagination={pagination}
             setLimit={setLimit}
             setPage={setPage}
-            showingUsers={filteredSubmittedVerificationUsers.length || 0}
-            totalUsers={pagination?.total || 0}
+            showingUsers={pagedUsers.length}
+            totalUsers={totalUsers}
           />
-        ) : null}
+        )}
 
         {/* Reject dialog */}
         <RejectDialog

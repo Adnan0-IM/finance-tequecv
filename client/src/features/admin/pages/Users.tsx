@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { optionsType } from "@/types/admin";
 import type { User } from "@/types/users";
 import {
@@ -73,18 +73,11 @@ import { getAdminAnimation } from "@/utils/adminAnimations";
 const Users = () => {
   // State for options and user management
   const [options, setoptions] = useState<optionsType>({
-    page: 1,
-    limit: 50,
     excludeAdmin: true,
     onlySubmitted: false, // Show all users by default
   });
-
-  function setPage(page: number) {
-    setoptions({ ...options, page: page });
-  }
-  function setLimit(limit: number) {
-    setoptions({ ...options, limit: limit });
-  }
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   // State for modals
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
@@ -102,7 +95,12 @@ const Users = () => {
 
   // Users come pre-filtered from the API now
   const filteredUsers = data?.users;
-  const pagination = data?.pagination;
+  const totalUsers = filteredUsers?.length ?? 0;
+  const pagedUsers = useMemo(() => {
+    if (!filteredUsers?.length) return [];
+    const start = (page - 1) * limit;
+    return filteredUsers.slice(start, start + limit);
+  }, [filteredUsers, page, limit]);
 
   // Debug output to check users and their roles
   useEffect(() => {
@@ -112,7 +110,7 @@ const Users = () => {
         filteredUsers.reduce<Record<string, number>>((acc, user) => {
           acc[user.role] = (acc[user.role] || 0) + 1;
           return acc;
-        }, {})
+        }, {}),
       );
     }
   }, [filteredUsers]);
@@ -140,7 +138,7 @@ const Users = () => {
   const navigate = useNavigate();
   const onViewDetails = useCallback(
     (userId: string) => navigate(`/admin/verification/${userId}`),
-    [navigate]
+    [navigate],
   );
   const handleRejectUser = () => {
     if (selectedUser) {
@@ -166,12 +164,14 @@ const Users = () => {
   useEffect(() => {
     // Reset to initial state when component mounts
     setoptions({
-      page: 1,
-      limit: 20,
       excludeAdmin: true,
       onlySubmitted: false, // Show all users by default
     });
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [options, limit]);
 
   return (
     <DashboardNavigation>
@@ -183,7 +183,7 @@ const Users = () => {
               <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
                 <div className="text-xs text-brand-accent">Total</div>
                 <div className="text-base text-brand-accent font-semibold">
-                  {pagination?.total || filteredUsers.length}
+                  {totalUsers}
                 </div>
               </div>
               <div className="bg-brand-secondary/40  text-brand-secondary  rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
@@ -218,7 +218,7 @@ const Users = () => {
                     v === "all"
                       ? undefined
                       : (v as "pending" | "approved" | "rejected");
-                  setoptions({ ...options, status: value, page: 1 });
+                  setoptions({ ...options, status: value });
                 }}
               >
                 <SelectTrigger id="status" className="w-44">
@@ -245,7 +245,7 @@ const Users = () => {
                 onValueChange={(v) => {
                   const value =
                     v === "all" ? undefined : (v as "investor" | "startup");
-                  setoptions({ ...options, role: value, page: 1 });
+                  setoptions({ ...options, role: value });
                 }}
               >
                 <SelectTrigger id="role" className="w-36">
@@ -274,7 +274,7 @@ const Users = () => {
                   placeholder="Name, email, phone..."
                   value={options.q || ""}
                   onChange={(e) => {
-                    setoptions({ ...options, q: e.target.value, page: 1 });
+                    setoptions({ ...options, q: e.target.value });
                   }}
                 />
               </div>
@@ -295,7 +295,6 @@ const Users = () => {
                     setoptions({
                       ...options,
                       onlySubmitted: !checked,
-                      page: 1,
                     });
                   }}
                 />
@@ -350,8 +349,8 @@ const Users = () => {
                     {(error as Error)?.message || "Failed to load users"}
                   </TableCell>
                 </TableRow>
-              ) : filteredUsers?.length ? (
-                filteredUsers.map((u: User) => (
+              ) : pagedUsers.length ? (
+                pagedUsers.map((u: User) => (
                   <TableRow
                     className="even:bg-brand-light hover:bg-brand-light/50 m-0 border-t p-0"
                     key={u._id}
@@ -371,8 +370,8 @@ const Users = () => {
                           u.verification?.status === "approved"
                             ? "default"
                             : u.verification?.status === "rejected"
-                            ? "destructive"
-                            : "secondary"
+                              ? "destructive"
+                              : "secondary"
                         }
                       >
                         {u.verification?.status || "pending"}
@@ -455,18 +454,15 @@ const Users = () => {
               )}
             </TableBody>
           </Table>
-
-          {/* Pagination Controls */}
-          {pagination && pagination.pages > 0 && (
+          {totalUsers > 0 && (
             <Pagination
-              pagination={pagination}
               isFetching={isFetching}
-              limit={options.limit}
+              limit={limit}
+              page={page}
               setLimit={setLimit}
-              page={options.page}
               setPage={setPage}
-              showingUsers={filteredUsers?.length || 0}
-              totalUsers={pagination.total || 0}
+              showingUsers={pagedUsers.length}
+              totalUsers={totalUsers}
             />
           )}
         </div>
@@ -518,8 +514,8 @@ const Users = () => {
                           selectedUser.verification?.status === "approved"
                             ? "default"
                             : selectedUser.verification?.status === "rejected"
-                            ? "destructive"
-                            : "secondary"
+                              ? "destructive"
+                              : "secondary"
                         }
                       >
                         {selectedUser.verification?.status || "pending"}

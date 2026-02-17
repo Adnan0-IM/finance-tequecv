@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardNavigation from "@/components/layout/DashboardLayout";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +64,8 @@ import {
   useCreateSubAdmin,
 } from "../api/adminQueries";
 import type { User } from "@/types/users";
+import Pagination from "../components/verification/Pagination";
+import { useSearchParams } from "react-router";
 
 // Define the Zod schema for admin creation with domain restriction
 const adminFormSchema = z.object({
@@ -90,8 +92,18 @@ import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
 import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const ManageSubAdmin = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   // State for search and filtering
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(() => {
+    const value = parseInt(searchParams.get("page") || "1", 10);
+    return Number.isNaN(value) ? 1 : Math.max(1, value);
+  });
+  const [limit, setLimit] = useState(() => {
+    const value = parseInt(searchParams.get("limit") || "20", 10);
+    if (Number.isNaN(value) || value <= 0) return 20;
+    return value;
+  });
 
   // State for modals
   const [createAdminOpen, setCreateAdminOpen] = useState(false);
@@ -113,12 +125,17 @@ const ManageSubAdmin = () => {
 
   // Get only admin users
   const { data, isPending, isError, error } = useUsers({
-    page: 1,
-    limit: 100,
     q: search,
   });
 
   const adminUsers = data?.users?.filter((user) => user.role === "admin") || [];
+  const totalAdmins = adminUsers.length;
+  const totalPages = Math.max(1, Math.ceil(totalAdmins / limit));
+  const pagedAdmins = useMemo(() => {
+    if (!adminUsers.length) return [];
+    const start = (page - 1) * limit;
+    return adminUsers.slice(start, start + limit);
+  }, [adminUsers, page, limit]);
 
   // Create subadmin mutation
   const createSubAdmin = useCreateSubAdmin();
@@ -138,7 +155,7 @@ const ManageSubAdmin = () => {
           onError: (error) => {
             toast.error(error.message || "Failed to delete admin");
           },
-        }
+        },
       );
     }
   };
@@ -165,6 +182,39 @@ const ManageSubAdmin = () => {
     setSelectedAdmin(admin);
     setDeleteAdminOpen(true);
   };
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, limit]);
+
+  useEffect(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("page", String(page));
+    nextParams.set("limit", String(limit));
+    if (
+      searchParams.get("page") === String(page) &&
+      searchParams.get("limit") === String(limit)
+    ) {
+      return;
+    }
+    setSearchParams(nextParams, { replace: true });
+  }, [page, limit, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const urlPage = parseInt(searchParams.get("page") || "1", 10);
+    const urlLimit = parseInt(searchParams.get("limit") || "20", 10);
+    const nextPage = Number.isNaN(urlPage) ? 1 : Math.max(1, urlPage);
+    const nextLimit = Number.isNaN(urlLimit) || urlLimit <= 0 ? 20 : urlLimit;
+
+    if (nextPage !== page) setPage(nextPage);
+    if (nextLimit !== limit) setLimit(nextLimit);
+  }, [searchParams, page, limit]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <DashboardNavigation>
@@ -234,8 +284,8 @@ const ManageSubAdmin = () => {
                       "Failed to load administrators"}
                   </TableCell>
                 </TableRow>
-              ) : adminUsers.length ? (
-                adminUsers.map((admin: User) => (
+              ) : pagedAdmins.length ? (
+                pagedAdmins.map((admin: User) => (
                   <TableRow
                     className="even:bg-brand-light hover:bg-brand-light/50 m-0 border-t p-0"
                     key={admin._id}
@@ -296,6 +346,17 @@ const ManageSubAdmin = () => {
               )}
             </TableBody>
           </Table>
+          {totalAdmins > 0 && (
+            <Pagination
+              isFetching={isPending}
+              limit={limit}
+              page={page}
+              setLimit={setLimit}
+              setPage={setPage}
+              showingUsers={pagedAdmins.length}
+              totalUsers={totalAdmins}
+            />
+          )}
         </div>
 
         {/* Create Admin Dialog with Zod validation */}
@@ -460,8 +521,11 @@ const ManageSubAdmin = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="font-bold">Role:</div>
                     <div className="col-span-2">
-                      
-                      <Badge variant="default">{selectedAdmin.isSuper ? "Super Administrator" : "Administrator"}</Badge>
+                      <Badge variant="default">
+                        {selectedAdmin.isSuper
+                          ? "Super Administrator"
+                          : "Administrator"}
+                      </Badge>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4">

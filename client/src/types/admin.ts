@@ -2,8 +2,8 @@ import type { User } from "./users";
 
 // Admin pagination and query options
 export type optionsType = {
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
   status?: "pending" | "approved" | "rejected" | "all" | "";
   q?: string;
   role?: "investor" | "startup" | "admin";
