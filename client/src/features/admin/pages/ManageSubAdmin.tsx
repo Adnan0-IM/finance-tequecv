@@ -199,23 +199,31 @@ const ManageSubAdmin = () => {
     // Check if URL needs to be updated to match state
     const urlNeedsUpdate = urlPage !== pageStr || urlLimit !== limitStr;
     
-    // Check if state needs to be updated to match URL (e.g., browser back/forward)
-    const parsedUrlPage = parseInt(urlPage || "1", 10);
-    const parsedUrlLimit = parseInt(urlLimit || "20", 10);
-    const validUrlPage = Number.isNaN(parsedUrlPage) ? 1 : Math.max(1, parsedUrlPage);
-    const validUrlLimit = Number.isNaN(parsedUrlLimit) || parsedUrlLimit <= 0 ? 20 : parsedUrlLimit;
-    const stateNeedsUpdate = validUrlPage !== page || validUrlLimit !== limit;
-
     if (urlNeedsUpdate) {
       // State is source of truth, update URL
       const nextParams = new URLSearchParams(searchParams);
       nextParams.set("page", pageStr);
       nextParams.set("limit", limitStr);
       setSearchParams(nextParams, { replace: true });
-    } else if (stateNeedsUpdate) {
-      // URL is source of truth (e.g., browser navigation), update state
-      if (validUrlPage !== page) setPage(validUrlPage);
-      if (validUrlLimit !== limit) setLimit(validUrlLimit);
+    } else {
+      // Check if state needs to be updated to match URL (e.g., browser back/forward)
+      const parsedUrlPage = parseInt(urlPage || "1", 10);
+      const parsedUrlLimit = parseInt(urlLimit || "20", 10);
+      const validUrlPage = Number.isNaN(parsedUrlPage) ? 1 : Math.max(1, parsedUrlPage);
+      const validUrlLimit = Number.isNaN(parsedUrlLimit) || parsedUrlLimit <= 0 ? 20 : parsedUrlLimit;
+      
+      const pageNeedsUpdate = validUrlPage !== page;
+      const limitNeedsUpdate = validUrlLimit !== limit;
+      
+      // Batch state updates to avoid multiple renders
+      if (pageNeedsUpdate && limitNeedsUpdate) {
+        setPage(validUrlPage);
+        setLimit(validUrlLimit);
+      } else if (pageNeedsUpdate) {
+        setPage(validUrlPage);
+      } else if (limitNeedsUpdate) {
+        setLimit(validUrlLimit);
+      }
     }
   }, [page, limit, searchParams, setSearchParams]);
 
