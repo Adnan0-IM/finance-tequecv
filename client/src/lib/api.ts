@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API_URL =
-  import.meta.env.MODE === "production" ? "/api" : "https://financetequecv.com/api";
+  import.meta.env.MODE === "production" ? "/api" : "htt://localhost:3000/api";
 
 export const api = axios.create({
   baseURL: API_URL,
