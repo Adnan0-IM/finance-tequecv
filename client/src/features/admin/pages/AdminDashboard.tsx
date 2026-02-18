@@ -37,8 +37,8 @@ const AdminDashboard = () => {
   const { user, setAllStats } = useAuth();
   const [search, setSearch] = useState("");
 
-  // Fetch users for dashboard stats with a reasonable limit
-  const { data, isPending, isError } = useUsers({ limit: 500 });
+  // Fetch users for dashboard stats
+  const { data, isPending, isError } = useUsers();
 
   // Memoize users array to prevent unnecessary recalculations
   const users = useMemo(() => data?.users || [], [data?.users]);
