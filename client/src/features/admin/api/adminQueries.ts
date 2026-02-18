@@ -22,7 +22,7 @@ export const adminKeys = {
 type UsersResult = { users: User[] };
 
 const fetchUsers = async (options: optionsType): Promise<UsersResult> => {
-  const { status, q, role, excludeAdmin, onlySubmitted } = options;
+  const { status, q, role, excludeAdmin, onlySubmitted, limit } = options;
 
   const params = new URLSearchParams();
   if (status) params.set("status", status);
@@ -30,6 +30,7 @@ const fetchUsers = async (options: optionsType): Promise<UsersResult> => {
   if (role) params.set("role", role);
   if (excludeAdmin) params.set("excludeAdmin", String(excludeAdmin));
   if (onlySubmitted) params.set("onlySubmitted", String(onlySubmitted));
+  if (limit) params.set("limit", String(limit));
 
   try {
     const res = await api.get(`/admin/users?${params.toString()}`);

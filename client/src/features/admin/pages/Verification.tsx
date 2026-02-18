@@ -49,10 +49,12 @@ const Verification = () => {
   }, [search]);
 
   // Build query options for fetching all submitted users (for stats)
+  // Note: Fetches up to 1000 users for client-side pagination and stats calculation
   const allSubmittedOptions = useMemo(() => {
     const opts: optionsType = {
       excludeAdmin: true,
       onlySubmitted: true,
+      limit: 1000, // Reasonable limit to prevent memory issues
     };
     // Add search query if defined
     if (q) {
@@ -70,6 +72,7 @@ const Verification = () => {
   const { mutate: verifyUser, isPending: verifying } = useVerifyUser();
 
   // Calculate stats client-side from all submitted users
+  // Note: These stats reflect the current search/role filters, not global totals
   const allSubmittedUsers = allData?.users ?? [];
   
   const stats = useMemo(() => {

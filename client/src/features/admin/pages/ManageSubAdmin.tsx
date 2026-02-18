@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardNavigation from "@/components/layout/DashboardLayout";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -93,9 +93,8 @@ import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const ManageSubAdmin = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const isUpdatingFromState = useRef(false);
   
-  // State for search and filtering
+  // Read initial state from URL, but manage state independently afterward
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(() => {
     const value = parseInt(searchParams.get("page") || "1", 10);
@@ -189,39 +188,34 @@ const ManageSubAdmin = () => {
     setPage(1);
   }, [search, limit]);
 
-  // Sync URL to state (for browser back/forward navigation)
+  // Consolidated URL synchronization effect
+  // This handles both directions: URL → State (browser navigation) and State → URL (user actions)
   useEffect(() => {
-    const urlPage = parseInt(searchParams.get("page") || "1", 10);
-    const urlLimit = parseInt(searchParams.get("limit") || "20", 10);
-    const nextPage = Number.isNaN(urlPage) ? 1 : Math.max(1, urlPage);
-    const nextLimit = Number.isNaN(urlLimit) || urlLimit <= 0 ? 20 : urlLimit;
-
-    // Only update state if URL differs and we're not already syncing
-    if ((nextPage !== page || nextLimit !== limit) && !syncingFromUrl.current) {
-      syncingFromUrl.current = true;
-      if (nextPage !== page) setPage(nextPage);
-      if (nextLimit !== limit) setLimit(nextLimit);
-      // Reset flag after state updates are applied
-      queueMicrotask(() => {
-        syncingFromUrl.current = false;
-      });
-    }
-  }, [searchParams, page, limit]);
-
-  // Sync state to URL (for user interactions)
-  useEffect(() => {
-    // Skip if we're syncing from URL to avoid circular updates
-    if (syncingFromUrl.current) return;
-    
     const urlPage = searchParams.get("page");
     const urlLimit = searchParams.get("limit");
+    const pageStr = String(page);
+    const limitStr = String(limit);
+
+    // Check if URL needs to be updated to match state
+    const urlNeedsUpdate = urlPage !== pageStr || urlLimit !== limitStr;
     
-    // Only update URL if it differs from current state
-    if (urlPage !== String(page) || urlLimit !== String(limit)) {
+    // Check if state needs to be updated to match URL (e.g., browser back/forward)
+    const parsedUrlPage = parseInt(urlPage || "1", 10);
+    const parsedUrlLimit = parseInt(urlLimit || "20", 10);
+    const validUrlPage = Number.isNaN(parsedUrlPage) ? 1 : Math.max(1, parsedUrlPage);
+    const validUrlLimit = Number.isNaN(parsedUrlLimit) || parsedUrlLimit <= 0 ? 20 : parsedUrlLimit;
+    const stateNeedsUpdate = validUrlPage !== page || validUrlLimit !== limit;
+
+    if (urlNeedsUpdate) {
+      // State is source of truth, update URL
       const nextParams = new URLSearchParams(searchParams);
-      nextParams.set("page", String(page));
-      nextParams.set("limit", String(limit));
+      nextParams.set("page", pageStr);
+      nextParams.set("limit", limitStr);
       setSearchParams(nextParams, { replace: true });
+    } else if (stateNeedsUpdate) {
+      // URL is source of truth (e.g., browser navigation), update state
+      if (validUrlPage !== page) setPage(validUrlPage);
+      if (validUrlLimit !== limit) setLimit(validUrlLimit);
     }
   }, [page, limit, searchParams, setSearchParams]);
 
