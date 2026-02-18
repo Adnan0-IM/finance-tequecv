@@ -69,9 +69,20 @@ exports.getUsers = async (req, res) => {
       ];
     }
 
+    // Add a hard limit to prevent memory issues while allowing client-side pagination.
+    // NOTE: This value is intentionally conservative because large payloads can cause
+    // high memory usage if multiple admin users request maximum-sized pages at once.
+    // Adjust only with care and after considering expected data volumes and capacity.
+    const MAX_LIMIT = 1000;
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = !isNaN(requestedLimit) && requestedLimit > 0 
+      ? Math.min(requestedLimit, MAX_LIMIT) 
+      : MAX_LIMIT;
+
     const items = await User.find(filter)
       .sort({ createdAt: -1 })
       .select("-password")
+      .limit(limit)
       .lean();
 
     res.json({

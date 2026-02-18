@@ -93,7 +93,8 @@ import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const ManageSubAdmin = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  // State for search and filtering
+  
+  // Read initial state from URL, but manage state independently afterward
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(() => {
     const value = parseInt(searchParams.get("page") || "1", 10);
@@ -187,31 +188,51 @@ const ManageSubAdmin = () => {
     setPage(1);
   }, [search, limit]);
 
+  // Consolidated URL synchronization effect
+  // This handles both directions: URL → State (browser navigation) and State → URL (user actions)
   useEffect(() => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", String(page));
-    nextParams.set("limit", String(limit));
-    if (
-      searchParams.get("page") === String(page) &&
-      searchParams.get("limit") === String(limit)
-    ) {
-      return;
+    const urlPage = searchParams.get("page");
+    const urlLimit = searchParams.get("limit");
+    const pageStr = String(page);
+    const limitStr = String(limit);
+
+    // Check if URL needs to be updated to match state
+    const urlNeedsUpdate = urlPage !== pageStr || urlLimit !== limitStr;
+    
+    if (urlNeedsUpdate) {
+      // State is source of truth, update URL
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("page", pageStr);
+      nextParams.set("limit", limitStr);
+      setSearchParams(nextParams, { replace: true });
+    } else {
+      // Check if state needs to be updated to match URL (e.g., browser back/forward)
+      const parsedUrlPage = parseInt(urlPage || "1", 10);
+      const parsedUrlLimit = parseInt(urlLimit || "20", 10);
+      const validUrlPage = Number.isNaN(parsedUrlPage) ? 1 : Math.max(1, parsedUrlPage);
+      const validUrlLimit = Number.isNaN(parsedUrlLimit) || parsedUrlLimit <= 0 ? 20 : parsedUrlLimit;
+      
+      const pageNeedsUpdate = validUrlPage !== page;
+      const limitNeedsUpdate = validUrlLimit !== limit;
+      
+      // Batch state updates to avoid multiple renders
+      if (pageNeedsUpdate && limitNeedsUpdate) {
+        setPage(validUrlPage);
+        setLimit(validUrlLimit);
+      } else if (pageNeedsUpdate) {
+        setPage(validUrlPage);
+      } else if (limitNeedsUpdate) {
+        setLimit(validUrlLimit);
+      }
     }
-    setSearchParams(nextParams, { replace: true });
   }, [page, limit, searchParams, setSearchParams]);
 
   useEffect(() => {
-    const urlPage = parseInt(searchParams.get("page") || "1", 10);
-    const urlLimit = parseInt(searchParams.get("limit") || "20", 10);
-    const nextPage = Number.isNaN(urlPage) ? 1 : Math.max(1, urlPage);
-    const nextLimit = Number.isNaN(urlLimit) || urlLimit <= 0 ? 20 : urlLimit;
-
-    if (nextPage !== page) setPage(nextPage);
-    if (nextLimit !== limit) setLimit(nextLimit);
-  }, [searchParams, page, limit]);
-
-  useEffect(() => {
-    if (page > totalPages) {
+    if (totalPages === 0) {
+      // Reset to page 1 when there are no pages
+      if (page !== 1) setPage(1);
+    } else if (page > totalPages) {
+      // Adjust to last page if current page exceeds total pages
       setPage(totalPages);
     }
   }, [page, totalPages]);
