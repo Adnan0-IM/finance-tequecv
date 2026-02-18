@@ -33,11 +33,6 @@ exports.getUsers = async (req, res) => {
   try {
     console.log("Raw query params:", req.query);
 
-    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
-    const limit = Math.min(
-      Math.max(parseInt(req.query.limit || "20", 10), 1),
-      100,
-    );
     const status = (req.query.status || "").trim();
     const q = (req.query.q || "").trim();
     const role = (req.query.role || "").trim();
@@ -74,20 +69,25 @@ exports.getUsers = async (req, res) => {
       ];
     }
 
-    const [items, total] = await Promise.all([
-      User.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .select("-password")
-        .lean(),
-      User.countDocuments(filter),
-    ]);
+    // Add a hard limit to prevent memory issues while allowing client-side pagination.
+    // NOTE: This value is intentionally conservative because large payloads can cause
+    // high memory usage if multiple admin users request maximum-sized pages at once.
+    // Adjust only with care and after considering expected data volumes and capacity.
+    const MAX_LIMIT = 1000;
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = !isNaN(requestedLimit) && requestedLimit > 0 
+      ? Math.min(requestedLimit, MAX_LIMIT) 
+      : MAX_LIMIT;
+
+    const items = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .select("-password")
+      .limit(limit)
+      .lean();
 
     res.json({
       success: true,
       data: items.map((u) => mapUserForAdmin(req, u)),
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error(error);

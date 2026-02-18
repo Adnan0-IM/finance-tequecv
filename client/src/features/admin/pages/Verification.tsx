@@ -14,12 +14,12 @@ import AdminPageWrapper from "@/components/layout/AdminPageWrapper";
 import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const Verification = () => {
-  // Filters and pagination
+  // Filters
   const [status, setStatus] = useState<optionsType["status"]>("pending");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   // Use the RoleFilter type imported from Toolbar component
   const [role, setRole] = useState<RoleFilter>("investor");
 
@@ -44,99 +44,70 @@ const Verification = () => {
     const id = setTimeout(() => {
       const val = search.trim();
       setQ(val.length ? val : undefined);
-      setPage(1);
     }, 400);
     return () => clearTimeout(id);
   }, [search]);
 
-  // Build query options
-  const options = useMemo(() => {
-    // Create the base options object
+  // Build query options for fetching submitted users
+  // Note: Limit of 1000 balances functionality with performance. This is higher than
+  // AdminDashboard (500) because verification workflows need access to more records.
+  const allSubmittedOptions = useMemo(() => {
     const opts: optionsType = {
-      page,
-      limit,
-      excludeAdmin: true, // Always exclude admin users
-      onlySubmitted: true, // Always show only submitted verification docs
+      excludeAdmin: true,
+      onlySubmitted: true,
+      limit: 1000,
     };
-
-    // Only add status to query if it's defined
-    if (status) {
-      opts.status = status;
-    }
-
     // Add search query if defined
     if (q) {
       opts.q = q;
     }
-
     // Add role filter if not "all"
     if (role !== "all") {
       opts.role = role as "investor" | "startup" | "admin";
     }
-
     return opts;
-  }, [page, limit, status, q, role]);
+  }, [q, role]);
 
-  // Data + actions
-  const { data, isPending, isFetching, isError, error } = useUsers(options);
+  // Fetch all submitted users once for stats calculation
+  const { data: allData, isPending, isFetching, isError, error } = useUsers(allSubmittedOptions);
   const { mutate: verifyUser, isPending: verifying } = useVerifyUser();
 
-  // Users come pre-filtered from the API now
-  const filteredSubmittedVerificationUsers = data?.users ?? [];
-  const pagination = data?.pagination;
+  // Calculate stats client-side from all submitted users
+  // Note: These stats reflect the current search/role filters, not global totals
+  const allSubmittedUsers = allData?.users ?? [];
+  
+  const stats = useMemo(() => {
+    return allSubmittedUsers.reduce(
+      (acc, u) => {
+        const status = u.verification?.status;
+        acc.total++;
+        if (status === "pending") acc.pending++;
+        else if (status === "approved") acc.approved++;
+        else if (status === "rejected") acc.rejected++;
+        return acc;
+      },
+      { total: 0, pending: 0, approved: 0, rejected: 0 }
+    );
+  }, [allSubmittedUsers]);
 
-  // Fetch all users with different statuses to populate the stats
-  const allStatusOptions = useMemo(
-    () => ({
-      ...options,
-      status: undefined,
-      page: 1,
-      limit: 1, // We only need the count, not the actual users
-    }),
-    [options]
-  );
+  // Filter by selected status
+  const filteredSubmittedVerificationUsers = useMemo(() => {
+    if (!status) return allSubmittedUsers;
+    return allSubmittedUsers.filter(u => u.verification?.status === status);
+  }, [allSubmittedUsers, status]);
 
-  const pendingOptions = useMemo(
-    () => ({
-      ...options,
-      status: "pending" as const,
-      page: 1,
-      limit: 1,
-    }),
-    [options]
-  );
-
-  const approvedOptions = useMemo(
-    () => ({
-      ...options,
-      status: "approved" as const,
-      page: 1,
-      limit: 1,
-    }),
-    [options]
-  );
-
-  const rejectedOptions = useMemo(
-    () => ({
-      ...options,
-      status: "rejected" as const,
-      page: 1,
-      limit: 1,
-    }),
-    [options]
-  );
-
-  const { data: allUsersData } = useUsers(allStatusOptions);
-  const { data: pendingUsersData } = useUsers(pendingOptions);
-  const { data: approvedUsersData } = useUsers(approvedOptions);
-  const { data: rejectedUsersData } = useUsers(rejectedOptions);
+  const totalUsers = filteredSubmittedVerificationUsers.length;
+  const pagedUsers = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredSubmittedVerificationUsers.slice(start, start + limit);
+  }, [filteredSubmittedVerificationUsers, page, limit]);
 
   // Handlers
   const onApprove = useCallback(
     (userId: string) => {
       verifyUser({ userId, statusObject: { status: "approved" } });
     },
-    [verifyUser]
+    [verifyUser],
   );
 
   const onReject = useCallback((userId: string) => {
@@ -154,18 +125,17 @@ const Verification = () => {
       setRejectOpen(false);
       setRejectUserId(null);
     },
-    [rejectUserId, verifyUser]
+    [rejectUserId, verifyUser],
   );
 
   const onViewDetails = useCallback(
     (userId: string) => navigate(`/admin/verification/${userId}`),
-    [navigate]
+    [navigate],
   );
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [status, limit, role]);
+  }, [status, search, role, limit]);
 
   return (
     <DashboardNavigation>
@@ -178,28 +148,28 @@ const Verification = () => {
             <div className="bg-brand-primary/70 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs text-brand-accent">Total</div>
               <div className="text-base text-brand-accent font-semibold">
-                {allUsersData?.pagination?.total || 0}
+                {stats.total}
               </div>
             </div>
 
             <div className="bg-yellow-100 text-yellow-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Pending</div>
               <div className="text-base font-semibold">
-                {pendingUsersData?.pagination?.total || 0}
+                {stats.pending}
               </div>
             </div>
 
             <div className="bg-green-100 text-green-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Approved</div>
               <div className="text-base font-semibold">
-                {approvedUsersData?.pagination?.total || 0}
+                {stats.approved}
               </div>
             </div>
 
             <div className="bg-red-100 text-red-800 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm">
               <div className="text-xs">Rejected</div>
               <div className="text-base font-semibold">
-                {rejectedUsersData?.pagination?.total || 0}
+                {stats.rejected}
               </div>
             </div>
           </div>
@@ -217,7 +187,7 @@ const Verification = () => {
 
         {/* Table */}
         <VerificationTable
-          users={filteredSubmittedVerificationUsers}
+          users={pagedUsers}
           error={error as Error | null}
           isError={isError}
           isFetching={isFetching}
@@ -228,19 +198,17 @@ const Verification = () => {
           onViewDetails={onViewDetails}
         />
 
-        {/* Pagination */}
-        {pagination?.pages && pagination.pages > 0 ? (
+        {totalUsers > 0 && (
           <Pagination
             isFetching={isFetching}
             limit={limit}
             page={page}
-            pagination={pagination}
             setLimit={setLimit}
             setPage={setPage}
-            showingUsers={filteredSubmittedVerificationUsers.length || 0}
-            totalUsers={pagination?.total || 0}
+            showingUsers={pagedUsers.length}
+            totalUsers={totalUsers}
           />
-        ) : null}
+        )}
 
         {/* Reject dialog */}
         <RejectDialog
