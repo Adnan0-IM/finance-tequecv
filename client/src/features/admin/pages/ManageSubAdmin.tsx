@@ -93,7 +93,7 @@ import { getAdminAnimation } from "@/utils/adminAnimations";
 
 const ManageSubAdmin = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const syncingFromUrl = useRef(false);
+  const isUpdatingFromState = useRef(false);
   
   // State for search and filtering
   const [search, setSearch] = useState("");
