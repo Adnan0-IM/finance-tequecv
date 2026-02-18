@@ -48,13 +48,14 @@ const Verification = () => {
     return () => clearTimeout(id);
   }, [search]);
 
-  // Build query options for fetching all submitted users (for stats)
-  // Note: Fetches up to 1000 users for client-side pagination and stats calculation
+  // Build query options for fetching submitted users
+  // Note: Limit of 1000 balances functionality with performance. This is higher than
+  // AdminDashboard (500) because verification workflows need access to more records.
   const allSubmittedOptions = useMemo(() => {
     const opts: optionsType = {
       excludeAdmin: true,
       onlySubmitted: true,
-      limit: 1000, // Reasonable limit to prevent memory issues
+      limit: 1000,
     };
     // Add search query if defined
     if (q) {
