@@ -14,14 +14,14 @@ import type {
 import type { User } from "@/types/users";
 
 export const adminKeys = {
-  users: (options: optionsType) => ["admin", "users", options] as const,
+  users: (options: optionsType = {}) => ["admin", "users", options] as const,
   user: (userId: string) => ["admin", "user", userId] as const,
   verification: (userId: string) => ["admin", "verification", userId] as const,
 };
 
 type UsersResult = { users: User[] };
 
-const fetchUsers = async (options: optionsType): Promise<UsersResult> => {
+const fetchUsers = async (options: optionsType = {}): Promise<UsersResult> => {
   const { status, q, role, excludeAdmin, onlySubmitted, limit } = options;
 
   const params = new URLSearchParams();
@@ -150,7 +150,7 @@ export const useCreateSubAdmin = () => {
   });
 };
 
-export const useUsers = (options: optionsType) => {
+export const useUsers = (options: optionsType = {}) => {
   return useQuery({
     queryKey: adminKeys.users(options),
     queryFn: () => fetchUsers(options),
