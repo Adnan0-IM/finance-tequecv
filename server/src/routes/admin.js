@@ -24,27 +24,12 @@ router.use(apiKeyOrBearerAdmin);
  *     tags: [Admin]
  *     summary: Get all users (admin or API key)
  *     description: |
- *       Supports pagination + filtering by role/verification status and free-text search.
+ *       Returns all matching users. Supports filtering by role/verification status and free-text search.
  *       Authentication can be either an admin JWT (bearerAuth) or a trusted system API key (ApiKeyAuth).
  *     security:
  *       - bearerAuth: []
  *       - ApiKeyAuth: []
  *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *           default: 1
- *         description: Page number (1-based)
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *         description: Page size (max 100)
  *       - in: query
  *         name: status
  *         schema:
@@ -89,13 +74,6 @@ router.use(apiKeyOrBearerAdmin);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/User'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page: { type: integer, example: 1 }
- *                     limit: { type: integer, example: 20 }
- *                     total: { type: integer, example: 133 }
- *                     pages: { type: integer, example: 7 }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden }
  */
